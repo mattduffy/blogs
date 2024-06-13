@@ -72,28 +72,28 @@ class Blog {
   #directoryIterator
 
   /**
-   * Create an instance of Album.
-   * @summary Create an instance of Album.
+   * Create an instance of Blog.
+   * @summary Create an instance of Blog.
    * @param { Object } config - An object literal containing configuration properties.
-   * @param { Boolean } [config.new = false] - True only if creating a new album.
-   * @param { string } config.rootDir - A string path for the root directory for all albums.
-   * @param { string } config.albumId - A string of the unique album id.
-   * @param { string } config.albumDir - A string of the album file system path.
-   * @param { string } config.albumUrl - Path portion of public url for the album.
-   * @param { string } config.albumPreviewImage - Path portion of the url to show album preview image.
-   * @param { string } config.albumImageUrl - Path portion of the public href url from the album images.
-   * @param { string } config.albumName - The name of the album.
-   * @param { string } config.albumOwer - The name of the album owner.
-   * @param { string } config.albumKeywords - The keywords of the album.
-   * @param { string } config.albumDescription - The description of the album.
-   * @param { Object[] } config.albumImages - An array of JSON objects, each describing an image.
-   * @param { Boolean } config.public - The visibilty status of the album.
+   * @param { Boolean } [config.new = false] - True only if creating a new blog.
+   * @param { string } config.rootDir - A string path for the root directory for all blog.
+   * @param { string } config.blogId - A string of the unique blog id.
+   * @param { string } config.blogDir - A string of the blog file system path.
+   * @param { string } config.blogUrl - Path portion of public url for the blog.
+   * @param { string } config.blogPreviewImage - Path portion of the url to show blog preview image.
+   * @param { string } config.blogImageUrl - Path portion of the public href url from the blog images.
+   * @param { string } config.blogName - The name of the blog.
+   * @param { string } config.blogOwer - The name of the blog owner.
+   * @param { string } config.blogKeywords - The keywords of the blog.
+   * @param { string } config.blogDescription - The description of the blog.
+   * @param { Object[] } config.blogImages - An array of JSON objects, each describing an image.
+   * @param { Boolean } config.public - The visibilty status of the blog.
    * @param { Object } config.redis - An instance of a redis connection.
    * @param { string } [config.streamId = null] - A stream id for redis recently added stream.
    * @param { string } config.dbName - A string with the db name if needed.
    * @param { Object } config.mongo - An instance of a mongoDB connection.
    * @param { Object } config.collection - A refernce to a mongoDB collection.
-   * @return { Album }
+   * @return { Blog }
    */
   constructor(config = {}) {
     // private properties
