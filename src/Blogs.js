@@ -19,13 +19,38 @@ class Blogs {
     this.#mongo = config?.mongo ?? null
   }
 
+  /**
+   * Create a new blog instance from form data.
+   * @summary Create a new blog instance from form data.
+   * @author Matthew Dufffy <mattduffy@gmail.com>
+   * @param { MongoClient|Collection } mongo - Either a mongodb client connection or its blog collection.
+   * @param { Object } o - An object literal with minimum required blog details.
+   * @param { String } o.description - A string containing the blog description.
+   * @param { String } o.title - A string containing the blog title.
+   * @param { String[] } o.keywords - An array of keywords.
+   * @param { Redis } redis - A redis client connection instance.
+   * @return { Blog|Boolean } - A populated instance of a Blog, or false if failed.
+   */
+  static async newBlog(mongo, o, redis) {
+    if (!mongo) return false
+    if (!o) return false
+    if (!redis) return false
+    return new Blog({
+      mongo,
+      redis,
+      description: o.description,
+      keywords: o.keywords,
+      name: o.title,
+    })
+  }
+
   /*
    * Find a saved album in the database by given id value and return as an Album instance.
    * @summary Find a saved album in the database by give id value and return as an Album instance.
    * @author Matthew Duffy <mattduffy@gmail.com>
    * @async
    * @param { MongoClient|Collection } mongo - Either a mongodb client connection or its album collection.
-   * @param { Redis } redis - A redis clint connection instance.
+   * @param { Redis } redis - A redis client connection instance.
    * @param { String } id - The string value of an ObjectId to search the db for.
    * @return { Album|Boolean } - A populated instance of an Album if found, otherwise false.
    */
