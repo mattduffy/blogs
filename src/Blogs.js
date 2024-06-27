@@ -35,12 +35,22 @@ class Blogs {
     if (!mongo) return false
     if (!o) return false
     if (!redis) return false
+    let collection
+    if (!mongo.s.namespace.collection) {
+      console.log('Setting db collection to: ', BLOGS)
+      collection = mongo.collection(BLOGS)
+    } else {
+      console.log('Collection is already set to: ', mongo.collectionName)
+      collection = mongo
+    }
+    console.log(o)
     return new Blog({
-      mongo,
+      dbName: 'mattmadethese',
+      collection,
       redis,
-      description: o.description,
-      keywords: o.keywords,
-      name: o.title,
+      description: o.blogDescription,
+      keywords: o.blogKeywords,
+      name: o.blogTitle,
     })
   }
 

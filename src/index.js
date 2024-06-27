@@ -104,11 +104,15 @@ class Blog {
     this.#streamId = config?.streamId ?? null
     this.#mongo = config?.mongo ?? config?.db ?? null
     if ((!config.collection) && (!this.#mongo?.s?.namespace?.collection)) {
-      console.log(this.#mongo)
-      this.#db = this.#mongo.db(config.dbName ?? process.env.DB_NAME).collection(BLOGS)
+      console.log('no collection provided: ', this.#mongo)
+      this.#db = this.#mongo.db(config.dbName).collection(BLOGS)
     } else if (config.collection?.collectionName !== undefined) {
+      console.log('db.collection:', config.collection?.collectionName)
       this.#db = config.collection
     } else {
+      console.log('config.dbName:', config.dbName)
+      console.log('config.collection: ', config.collection)
+      console.log('config.mongo: ', config.mongo)
       this.#db = null
     }
     this.#rootDir = config?.rootDir ?? process.env.ALBUMS_ROOT_DIR ?? null
@@ -1178,7 +1182,7 @@ class Blog {
    * @throws Error
    * @return { Object }
    */
-  async createAlbumJson() {
+  async createBlogJson() {
     return {
       _id: this.#blogId,
       dir: this.#blogDir,
