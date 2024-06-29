@@ -51,7 +51,42 @@ class Blogs {
       description: o.blogDescription,
       keywords: o.blogKeywords,
       name: o.blogTitle,
+      creator: o.creator,
+      public: o.public,
     })
+  }
+
+  /*
+   * Find a saved blog in the database by given username and return as a Blog instance.
+   * @summary Find a saved blog in the database by given username and return as a Blog instance.
+   * @author Matthew Duffy <mattduffy@gmail.com>
+   * @async
+   * @param { MongoClient|Collection } mongo - Either a mongodb client connection or its blog collection.
+   * @param { Redis } redis - A redis client connection instance.
+   * @param { String } username - The string value of a username to search the db for.
+   * @return { Blog|Boolean } - A populated instance of a Blog if found, otherwise false.
+   */
+  static async getByUsername(mongo, username, redis) {
+    if (!mongo) return false
+    if (!username) return false
+    let collection
+    if (!mongo.s.namespace.collection) {
+      console.log('Setting db collection to: ', BLOGS)
+      collection = mongo.collection(BLOGS)
+    } else {
+      console.log('Collection is already set: ', mongo.collectionName)
+      collection = mongo
+    }
+    try {
+      const found = await collection.findOne({ creator: username })
+      console.log(found)
+      found.collection = collection
+      found.redis = redis
+      return new Blog(found)
+    } catch (e) {
+      console.error(e)
+    }
+    return false
   }
 
   /*
