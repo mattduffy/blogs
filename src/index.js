@@ -19,6 +19,7 @@ const _info = Info.extend('blog')
 const _warn = Warn.extend('blog')
 const _error = _Error.extend('blog')
 const BLOGS = 'blogs'
+const MAX_SLUG_LENGTH = 20
 
 /**
  * A class to model the shape and properties of a blog of posts.
@@ -59,7 +60,7 @@ class Blog {
 
   #albumImageUrl
 
-  #blogName
+  #blogTitle
 
   #blogOwner
 
@@ -82,7 +83,7 @@ class Blog {
    * @param { string } config.blogUrl - Path portion of public url for the blog.
    * @param { string } config.blogPreviewImage - Path portion of the url to show blog preview image.
    * @param { string } config.blogImageUrl - Path portion of the public href url from the blog images.
-   * @param { string } config.blogName - The name of the blog.
+   * @param { string } config.blogTitle - The title of the blog.
    * @param { string } config.blogOwer - The name of the blog owner.
    * @param { string } config.blogKeywords - The keywords of the blog.
    * @param { string } config.blogDescription - The description of the blog.
@@ -120,9 +121,9 @@ class Blog {
     this.#blogId = config?.blogId ?? config.Id ?? config?.id ?? config?._id ?? null
     this.#blogDir = config?.blogDir ?? config?.dir ?? null
     this.#albumPreviewImage = config.albumPreviewImage ?? config.previewImage ?? null
-    this.#blogUrl = config?.blogUrl ?? config?.url ?? null
+    this.#blogUrl = config?.blogUrl ?? config?.url ?? config?.slug ?? null
     this.#albumImageUrl = config?.albumImageUrl ?? config?.imageUrl ?? null
-    this.#blogName = config?.blogName ?? config.name ?? null
+    this.#blogTitle = config?.blogTitle ?? config.title ?? null
     this.#blogOwner = config?.blogOwner ?? config.owner ?? config?.creator ?? null
     if (config?.blogKeywords) {
       this.#blogKeywords = new Set(config.blogKeywords)
@@ -284,7 +285,7 @@ class Blog {
       log(`adding new blog (id: ${this.#blogId}) to redis stream`)
       const entry = {
         id: this.#blogId,
-        name: this.#blogName,
+        title: this.#blogTitle,
         owner: this.#blogOwner,
         access: this._blogPublic,
         preview: this.#albumPreviewImage,
@@ -371,16 +372,16 @@ class Blog {
   }
 
   /**
-   * Delete the album.
-   * @summary Delete the album.
+   * Delete the blog.
+   * @summary Delete the blog.
    * @author Matthew Duffy <mattduffy@gmail.com>
    * @async
-   * @return { Booloean } - True if album is successfully deleted.
+   * @return { Booloean } - True if blog is successfully deleted.
    */
-  async deleteAlbum() {
+  async deleteBlog() {
     const log = _log.extend('deleteBlog')
     const error = _error.extend('deleteBlog')
-    log(`About to delete album: ${this.#blogName}`)
+    log(`About to delete blog: ${this.#blogTitle}`)
     log(this.#blogDir)
     let deleted
     try {
@@ -416,8 +417,8 @@ class Blog {
   }
 
   /**
-   * Save album json to db.
-   * @summary Save album json to db.
+   * Save blog json to db.
+   * @summary Save blog json to db.
    * @author Matthew Duffy <mattduffy@gmail.com>
    * @async
    * @throws { Error } If no db collection is available.
@@ -443,6 +444,9 @@ class Blog {
       theId = new ObjectId(this.#blogId)
     }
     log(`the _id is ${theId}`)
+    if (!this.#blogUrl) {
+      this.url = this.#blogTitle
+    }
     try {
       if (this._albumPublic) {
         const add = await this.addToRedisStream()
@@ -473,7 +477,7 @@ class Blog {
             dir: this.#blogDir,
             imageUrl: this.#albumImageUrl,
             creator: this.#blogOwner,
-            name: this.#blogName,
+            title: this.#blogTitle,
             url: this.#blogUrl,
             previewImage: this.#albumPreviewImage,
             description: this.#blogDescription,
@@ -1188,7 +1192,7 @@ class Blog {
       dir: this.#blogDir,
       imageUrl: this.#albumImageUrl,
       creator: this.#blogOwner,
-      name: this.#blogName,
+      title: this.#blogTitle,
       url: this.#blogUrl,
       description: this.#blogDescription,
       keywords: Array.from(this.#blogKeywords),
@@ -1271,7 +1275,13 @@ class Blog {
   }
 
   set url(url) {
+    this.#log(`set url(${url})`)
     this.#blogUrl = url
+      .replaceAll(/[.,!()]/g, '')
+      .split(' ')
+      .slice(0, MAX_SLUG_LENGTH)
+      .join('-')
+    this._slug = this.url
   }
 
   get images() {
@@ -1286,12 +1296,12 @@ class Blog {
     return this.#albumPreviewImage
   }
 
-  get name() {
-    return this.#blogName
+  get title() {
+    return this.#blogTitle
   }
 
-  set name(name) {
-    this.#blogName = name
+  set title(title) {
+    this.#blogTitle = title
   }
 
   get owner() {

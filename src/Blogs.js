@@ -50,7 +50,7 @@ class Blogs {
       redis,
       description: o.blogDescription,
       keywords: o.blogKeywords,
-      name: o.blogTitle,
+      title: o.blogTitle,
       creator: o.creator,
       public: o.public,
     })
