@@ -6,6 +6,7 @@
 
 import path from 'node:path'
 import fs from 'node:fs/promises'
+import Post from './Post.js'
 import { ObjectId } from '../lib/mongodb-client.js'
 import {
   _log as Log,
@@ -218,6 +219,36 @@ class Blog {
       throw new Error(msg, { cause: e })
     }
     return this
+  }
+
+  /**
+   * Get <count> number of posts starting from post number <start>.
+   * @summary Get <count> number of posts starting from post number <start>.
+   * @author Matthew Duffy <mattduffy@gmail.com>
+   * @async
+   * @param { Number } [start = 0] - Return collection of posts starting with post number <start>.
+   * @param { Number } [count = 10] - The max number of posts to return.
+   * @return { Post|Post[] }
+   */
+  async posts(start = 0, count = 10) {
+    return Post.get(this.#blogId, start, count)
+  }
+
+  /**
+   * Create a new blog post.
+   * @summary Create a new blog post.
+   * @author Matthew Duffy <mattduffy@gmail.com>
+   * @async
+   * @param { Object } p - The blog post content.
+   * @param { string } p.title
+   * @param { Date } p.created
+   * @param { string } p.author
+   * @param { string } p.title
+   * @param { string } p.content
+   * @return { Post|Boolean }
+   */
+  async newPost(p) {
+    return Post.newPost(this.#blogId, p)
   }
 
   /**
