@@ -4,12 +4,14 @@
  * @file src/Blogs.js An interface to work with multiple blogs.
  */
 
-import { Blog } from './index.js'
+import { Blog } from './Blog.js'
 import { ObjectId } from '../lib/mongodb-client.js'
 
 const BLOGS = 'blogs'
 
 class Blogs {
+  static #emptyMessage = 'Nothing here yet.'
+
   #redis
 
   #mongo
@@ -90,11 +92,11 @@ class Blogs {
   }
 
   /*
-   * Find a saved album in the database by given id value and return as an Album instance.
-   * @summary Find a saved album in the database by give id value and return as an Album instance.
+   * Find a saved blog in the database by given id value and return as an Album instance.
+   * @summary Find a saved blog in the database by give id value and return as an Album instance.
    * @author Matthew Duffy <mattduffy@gmail.com>
    * @async
-   * @param { MongoClient|Collection } mongo - Either a mongodb client connection or its album collection.
+   * @param { MongoClient|Collection } mongo - Either a mongodb client connection or its blog collection.
    * @param { Redis } redis - A redis client connection instance.
    * @param { String } id - The string value of an ObjectId to search the db for.
    * @return { Album|Boolean } - A populated instance of an Album if found, otherwise false.
@@ -117,13 +119,17 @@ class Blogs {
     return new Blog(found)
   }
 
+  static async usersWithPublicBlogs() {
+    return this.#emptyMessage
+  }
+
   /*
-   * Return a list of public and private albums for a specific user account.
-   * @summary Return a list of public and private albums for a specific user account.
+   * Return a list of public and private blog for a specific user account.
+   * @summary Return a list of public and private blog for a specific user account.
    * @author Matthew Duffy <mattduffy@gmail.com>
    * @async
    * @param { (MongoClient|Collection) } mongo - Either a mongodb client connection or its ablum collection.
-   * @param { String } username - The name of user for album list.
+   * @param { String } username - The name of user for blog list.
    * @return { (Object|Boolean) } - An object literal with public and private list, or false if none found.
    */
   static async list(mongo, user) {
@@ -150,7 +156,7 @@ class Blogs {
         default: 'public',
         output: {
           count: { $sum: 1 },
-          albums: {
+          blogs: {
             $push: {
               id: '$_id',
               public: '$public',
@@ -166,21 +172,21 @@ class Blogs {
     pipeline.push({ $match: { count: { $gt: 0 } } })
     console.log(pipeline)
     console.log(`Looking for blog for user: ${user}`)
-    // const albumCursor = await collection.find({ albumOwner: user }).toArray()
-    // const albumCursor = await collection.find({ creator: user }, { projection: { name: 1, public: 1, url: 1 } }).toArray()
+    // const blogCursor = await collection.find({ blogOwner: user }).toArray()
+    // const blogCursor = await collection.find({ creator: user }, { projection: { name: 1, public: 1, url: 1 } }).toArray()
     const blogBuckets = await collection.aggregate(pipeline).toArray()
-    // console.log('albumBuckets: %o', albumBuckets)
+    // console.log('blogBuckets: %o', blogBuckets)
     return blogBuckets
   }
 
   /*
-   * Return a list of recently added albums.
-   * @summary Return a list of recently added albums.
+   * Return a list of recently added blog.
+   * @summary Return a list of recently added blog.
    * @author Matthew Duffy <mattduffy@gmail.com>
    * @async
    * @param { RedisClient } redis - Client connection to redis.
-   * @param { number } [count=10] - Number of recently added albums to return, default is 10.
-   * @returm { Array } - An array of recently added albums.
+   * @param { number } [count=10] - Number of recently added blogs to return, default is 10.
+   * @returm { Array } - An array of recently added blogs.
    */
   static async recentlyAdded(redis, count = 10) {
     const recentlyAddedStream = 'blogs:recent:10'
@@ -194,8 +200,8 @@ class Blogs {
   }
 
   /*
-   * Return a list of users with publicly accessible albums.
-   * @summary Return a list of users with publicly accessible albums.
+   * Return a list of users with publicly accessible blogs.
+   * @summary Return a list of users with publicly accessible blogs.
    * @author Matthew Duffy <mattduffy@gmail.com>
    * @async
    * @param { (MongoClient|Collection) } mongo - Either a mongodb client connection or its ablum collection.
