@@ -16,8 +16,9 @@
   },
   "exports": {
     ".": "./src/index.js",
-    "./Blogs": "./src/Blogs.js",
+    "./Blog": "./src/Blog.js'",
     "./Post": "./src/Post.js",
+    "./Blogs": "./src/Blogs.js",
     "./test": "./test/*.js",
     "./package.json": "./package.json"
   },
