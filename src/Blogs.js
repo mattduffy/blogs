@@ -119,8 +119,48 @@ class Blogs {
     return new Blog(found)
   }
 
-  static async usersWithPublicBlogs() {
-    return this.#emptyMessage
+  /**
+   * Get a list of publicly accessible blogs.
+   * @summary Get a list of publicly accessible blogs.
+   * @author Matthew Duffy <mattduffy@gmail.com>
+   * @async
+   * @param { MongoClient|Collection } mongo - Either a mongodb client connection or its blog collection.
+   * @return { Object[] } - An array of objects listing public blog details.
+   */
+  static async usersWithPublicBlogs(mongo) {
+    if (!mongo) return false
+    let collection
+    if (!mongo.s.namespace.collection) {
+      console.log('Setting db collection to: ', BLOGS)
+      collection = mongo.collection(BLOGS)
+    } else {
+      console.log('Collection is already set: ', mongo.collectionName)
+      collection = mongo
+    }
+    let found
+    const filter = { public: true }
+    // const opts = { projection: { _id: 1, title: 1, url: 1 } }
+    try {
+      // found = await collection.find(filter, opts)
+      found = await collection.find(filter)
+    } catch (e) {
+      console.log(e)
+    }
+    return found.toArray()
+  }
+
+  /**
+   * Get a list of recenlty updated blogs.
+   * @summary Get a list of recently updated blogs.
+   * @author Matthew Duffy <mattduffy@gmail.com>
+   * @async
+   * @param { Redis } redis - A redis client connection instance.
+   * @return { Object[] } - An array of objects listing recently updated blog details.
+   */
+  static async recentlyUpdated(redis) {
+    if (!redis) return false
+    // jreturn this.#emptyMessage
+    return []
   }
 
   /*
