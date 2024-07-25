@@ -8,6 +8,7 @@ import { Blog } from './Blog.js'
 import { ObjectId } from '../lib/mongodb-client.js'
 
 const BLOGS = 'blogs'
+const PUBLICBLOGS = 'publicBlogsView'
 
 class Blogs {
   static #emptyMessage = 'Nothing here yet.'
@@ -130,19 +131,17 @@ class Blogs {
   static async usersWithPublicBlogs(mongo) {
     if (!mongo) return false
     let collection
-    if (!mongo.s.namespace.collection) {
-      console.log('Setting db collection to: ', BLOGS)
-      collection = mongo.collection(BLOGS)
+    // if (!mongo.s.namespace.collection) {
+    if (!mongo.s.namespace.collection !== PUBLICBLOGS) {
+      console.log('Setting db collection to: ', PUBLICBLOGS)
+      collection = mongo.collection(PUBLICBLOGS)
     } else {
       console.log('Collection is already set: ', mongo.collectionName)
       collection = mongo
     }
     let found
-    const filter = { public: true }
-    // const opts = { projection: { _id: 1, title: 1, url: 1 } }
     try {
-      // found = await collection.find(filter, opts)
-      found = await collection.find(filter)
+      found = await collection.find()
     } catch (e) {
       console.log(e)
     }
