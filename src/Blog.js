@@ -71,7 +71,7 @@ class Blog {
    * Create an instance of Blog.
    * @summary Create an instance of Blog.
    * @param { Object } config - An object literal containing configuration properties.
-   * @param { Boolean } [config.new = false] - True only if creating a new blog.
+   * @param { Boolean } [config.newBlog = false] - True only if creating a new blog.
    * @param { Object } config.mongo - An instance of a mongoDB connection.
    * @param { string } config.dbName - A string with the db name if needed.
    * @param { Object } config.collection - A refernce to a mongoDB collection.
@@ -92,7 +92,7 @@ class Blog {
     // private properties
     const log = _log.extend('constructor')
     const error = _error.extend('constructor')
-    this.#newBlog = config?.new ?? false
+    this.#newBlog = config?.newBlog ?? false
     this.#redis = config?.redis ?? null
     this.#mongo = config?.mongo ?? config?.db ?? null
     if ((!config.collection) && (!this.#mongo?.s?.namespace?.collection)) {
@@ -112,6 +112,7 @@ class Blog {
     this.#blogTitle = config?.blogTitle ?? config.title ?? null
     this.#blogUrl = config?.blogUrl ?? config?.url ?? config?.slug ?? slugify(this.#blogTitle) ?? null
     this.#blogOwnerId = config?.blogOwnerId ?? config.ownerId ?? config?.creatorId ?? null
+    this.#blogOwnerName = config?.blogOwnerName ?? config.ownerName ?? config?.creatorName ?? null
     if (config?.blogKeywords) {
       this.#blogKeywords = new Set(config.blogKeywords)
     } else if (config?.keywords) {
@@ -123,6 +124,7 @@ class Blog {
     this.#blogImages = config?.blogImages ?? config?.images ?? []
     // pseudo-protected properties
     this._blogPublic = config?.public ?? false
+    this._posts = []
   }
 
   /**
@@ -220,19 +222,20 @@ class Blog {
       const msg = `No connection to client collection ${BLOGS}`
       throw new Error(msg)
     }
+    log(this.#newBlog)
+    if (this.#newBlog) {
+      this.#blogId = new ObjectId()
+      log('creating an new ObjectId _id..')
+    // } else {
+    //   this.#blogId = new ObjectId(this.#blogId)
+    }
+    log(`the _id is ${this.#blogId}`)
     if (!this.#blogJson) {
       this.#blogJson = await this.createBlogJson()
     }
+    log(this.#blogJson)
     let saved
     let filter
-    let theId
-    if (this.#newBlog) {
-      theId = new ObjectId()
-      this.#blogId = theId
-    } else {
-      theId = new ObjectId(this.#blogId)
-    }
-    log(`the _id is ${theId}`)
     if (!this.#blogUrl) {
       this.#blogUrl = slugify(this.#blogTitle)
       this.url = this.#blogUrl
@@ -251,40 +254,38 @@ class Blog {
     //   error(e)
     // }
     try {
-      filter = { _id: new ObjectId(theId) }
+      filter = { _id: this.#blogId }
       const options = { upsert: true }
-      if (!this.#blogId) {
-        this.#blogId = new ObjectId(this.#blogId)
-        this.#blogJson._id = this.#blogId
-        saved = await this.#db.insertOne(this.#blogJson)
-      } else {
-        log('save filter: %o', filter)
-        log('replace doc: %o', this.#blogJson)
-        const update = {
-          $set: {
-            streamId: null, // this.#streamId,
-            headerImageUrl: this.#blogHeaderImage,
-            creator: this.#blogOwnerId,
-            title: this.#blogTitle,
-            url: this.#blogUrl,
-            description: this.#blogDescription,
-            keywords: Array.from(this.#blogKeywords),
-            public: this._blogPublic,
-            postCount: this._posts.length,
-          },
-        }
-        if (this.#newBlog) {
-          update.$set._id = theId
-          update.$set.created = new Date()
-        }
-        log('the update doc: %o', update)
-        saved = await this.#db.updateOne(filter, update, options)
-        saved.insertedId = this.#blogId
+      log('save filter: %o', filter)
+      log('replace doc: %o', this.#blogJson)
+      const update = {
+        $set: {
+          _id: this.#blogId,
+          streamId: null, // this.#streamId,
+          headerImageUrl: this.#blogHeaderImage,
+          creatorId: this.#blogOwnerId,
+          creatorName: this.#blogOwnerName,
+          title: this.#blogTitle,
+          url: this.#blogUrl,
+          description: this.#blogDescription,
+          keywords: Array.from(this.#blogKeywords),
+          public: this._blogPublic,
+          postCount: this._posts.length,
+        },
       }
+      if (this.#newBlog) {
+        update.$set.createdOn = new Date()
+      } else {
+        update.$set.modifiedOn = new Date()
+      }
+      log('the update doc: %o', update)
+      saved = await this.#db.updateOne(filter, update, options)
+      saved.insertedId = this.#blogId
       log('Blog save results: %o', saved)
     } catch (e) {
       const err = 'Failed to save blog json to db.'
       error(err)
+      error(e)
       throw new Error(err, { cause: e })
     }
 
@@ -309,9 +310,9 @@ class Blog {
    */
   async createBlogJson() {
     return {
-      _id: this.#blogId.toString(),
+      _id: this.#blogId,
       headerImageUrl: this.#blogHeaderImage,
-      creator: this.#blogOwnerId.toString(),
+      creator: this.#blogOwnerId,
       title: this.#blogTitle,
       url: this.#blogUrl,
       description: this.#blogDescription,
@@ -353,9 +354,9 @@ class Blog {
 
   set url(url) {
     const log = _log.extend('set-url')
-    log(`set url(${url})`)
     this.#blogUrl = slugify(url)
     this._slug = this.url
+    log(`set url(${url}) : ${this.#blogUrl}`)
   }
 
   get title() {
@@ -376,6 +377,14 @@ class Blog {
     } else {
       this.#blogOwnerId = id
     }
+  }
+
+  get author() {
+    return this.#blogOwnerName
+  }
+
+  set author(name) {
+    this.#blogOwnerName = name
   }
 
   get ownerName() {
