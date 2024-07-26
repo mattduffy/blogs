@@ -38,6 +38,7 @@ class Blogs {
     if (!mongo) return false
     if (!o) return false
     if (!redis) return false
+    console.log('Creating a new blog...')
     let collection
     if (!mongo.s.namespace.collection) {
       console.log('Setting db collection to: ', BLOGS)
@@ -51,11 +52,7 @@ class Blogs {
       dbName: 'mattmadethese',
       collection,
       redis,
-      description: o.blogDescription,
-      keywords: o.blogKeywords,
-      title: o.blogTitle,
-      creator: o.creator,
-      public: o.public,
+      ...o,
     })
   }
 
