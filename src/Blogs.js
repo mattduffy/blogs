@@ -6,12 +6,23 @@
 
 import { Blog } from './Blog.js'
 import { ObjectId } from '../lib/mongodb-client.js'
+import {
+  _log as Log,
+  _error as _Error,
+} from './utils/debug.js'
+
+// const _log = Log.extend('Blog')
+// const _error = _Error.extend('Blog')
 
 const BLOGS = 'blogs'
 const PUBLICBLOGS = 'publicBlogsView'
 
 class Blogs {
   static #emptyMessage = 'Nothing here yet.'
+
+  static #log = Log.extend('Blog')
+
+  static #error = _Error.extend('Blog')
 
   #redis
 
@@ -35,19 +46,20 @@ class Blogs {
    * @return { Blog|Boolean } - A populated instance of a Blog, or false if failed.
    */
   static async newBlog(mongo, o, redis) {
+    const log = this.#log.extend('newBlog')
     if (!mongo) return false
     if (!o) return false
     if (!redis) return false
-    console.log('Creating a new blog...')
+    log('Creating a new blog...')
     let collection
     if (!mongo.s.namespace.collection) {
       console.log('Setting db collection to: ', BLOGS)
       collection = mongo.collection(BLOGS)
     } else {
-      console.log('Collection is already set to: ', mongo.collectionName)
+      log('Collection is already set to: ', mongo.collectionName)
       collection = mongo
     }
-    console.log(o)
+    log(o)
     return new Blog({
       dbName: 'mattmadethese',
       collection,
@@ -67,24 +79,28 @@ class Blogs {
    * @return { Blog|Boolean } - A populated instance of a Blog if found, otherwise false.
    */
   static async getByUsername(mongo, username, redis) {
+    const log = this.#log.extend('getByUsername')
+    const error = this.#error.extend('getByUsername')
     if (!mongo) return false
     if (!username) return false
     let collection
     if (!mongo.s.namespace.collection) {
-      console.log('Setting db collection to: ', BLOGS)
+      log('Setting db collection to: ', BLOGS)
       collection = mongo.collection(BLOGS)
     } else {
-      console.log('Collection is already set: ', mongo.collectionName)
+      log('Collection is already set: ', mongo.collectionName)
       collection = mongo
     }
+    let found
     try {
-      const found = await collection.findOne({ creator: username })
-      console.log(found)
+      const filter = { creatorName: username }
+      found = await collection.findOne(filter)
+      log(found)
       found.collection = collection
       found.redis = redis
       return new Blog(found)
     } catch (e) {
-      console.error(e)
+      error(e)
     }
     return false
   }
@@ -100,21 +116,29 @@ class Blogs {
    * @return { Album|Boolean } - A populated instance of an Album if found, otherwise false.
    */
   static async getById(mongo, id, redis) {
+    const log = this.#log.extend('getById')
+    const error = this.#error.extend('getById')
     if (!mongo) return false
     if (!id) return false
     let collection
     if (!mongo.s.namespace.collection) {
-      console.log('Setting db collection to: ', BLOGS)
+      log('Setting db collection to: ', BLOGS)
       collection = mongo.collection(BLOGS)
     } else {
-      console.log('Collection is already set: ', mongo.collectionName)
+      log('Collection is already set: ', mongo.collectionName)
       collection = mongo
     }
-    const found = await collection.findOne({ _id: new ObjectId(id) })
-    console.log(found.keywords)
-    found.collection = collection
-    found.redis = redis
-    return new Blog(found)
+    let found
+    try {
+      found = await collection.findOne({ _id: new ObjectId(id) })
+      log(found.keywords)
+      found.collection = collection
+      found.redis = redis
+      return new Blog(found)
+    } catch (e) {
+      error(e)
+    }
+    return false
   }
 
   /**
@@ -126,21 +150,23 @@ class Blogs {
    * @return { Object[] } - An array of objects listing public blog details.
    */
   static async usersWithPublicBlogs(mongo) {
+    const log = this.#log.extend('usersWithPublicBlogs')
+    const error = this.#error.extend('usersWithPublicBlogs')
     if (!mongo) return false
     let collection
     // if (!mongo.s.namespace.collection) {
     if (!mongo.s.namespace.collection !== PUBLICBLOGS) {
-      console.log('Setting db collection to: ', PUBLICBLOGS)
+      log('Setting db collection to: ', PUBLICBLOGS)
       collection = mongo.collection(PUBLICBLOGS)
     } else {
-      console.log('Collection is already set: ', mongo.collectionName)
+      log('Collection is already set: ', mongo.collectionName)
       collection = mongo
     }
     let found
     try {
       found = await collection.find()
     } catch (e) {
-      console.log(e)
+      error(e)
     }
     return found.toArray()
   }
@@ -154,8 +180,10 @@ class Blogs {
    * @return { Object[] } - An array of objects listing recently updated blog details.
    */
   static async recentlyUpdated(redis) {
+    // const log = this.#log.extend('recentlyUpdated')
+    // const error = this.#error.extend('recentlyUpdated')
     if (!redis) return false
-    // jreturn this.#emptyMessage
+    // return this.#emptyMessage
     return []
   }
 
