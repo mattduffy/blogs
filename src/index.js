@@ -4,7 +4,7 @@
  * @file src/index.js The Blog class definition file.
  */
 
-import { Blog } from './Blog.js'
+import { Blog, slugify } from './Blog.js'
 import { Post } from './Post.js'
 import { Blogs } from './Blogs.js'
 import { ObjectId } from '../lib/mongodb-client.js'
@@ -17,6 +17,7 @@ const _log = Log.extend('Blog-index')
 const _error = _Error.extend('Blog-index')
 
 export {
+  slugify,
   Blog,
   Post,
   Blogs,

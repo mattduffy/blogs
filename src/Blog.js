@@ -442,4 +442,7 @@ class Blog {
   }
 }
 
-export { Blog }
+export {
+  Blog,
+  slugify,
+}

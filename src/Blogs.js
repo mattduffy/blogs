@@ -131,7 +131,7 @@ class Blogs {
     let found
     try {
       found = await collection.findOne({ _id: new ObjectId(id) })
-      log(found.keywords)
+      log(`found: ${found.title}`)
       found.collection = collection
       found.redis = redis
       return new Blog(found)
