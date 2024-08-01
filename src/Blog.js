@@ -25,7 +25,10 @@ const MAX_SLUG_LENGTH = process.env.MAX_SLUG_LENGTH || 80
  */
 function slugify(t) {
   if (!t) return null
-  return t.replace(/[^\p{L}\p{N}\p{Z}]/gu, '').replace(/\s+/g, '-').slice(0, MAX_SLUG_LENGTH)
+  return t.toLowerCase() // convert to lowercase letters
+    .replace(/[^\p{Letter}\p{Number}\p{Separator}]/gv, '') // restrict by unicode character classes
+    .replace(/\s+/g, '-') // collapse multiple spaces to single space and replace with dash
+    .slice(0, MAX_SLUG_LENGTH) // truncate slug to global variable
 }
 
 /**
@@ -103,9 +106,9 @@ class Blog {
       this.#db = config.collection
     } else {
       this.#db = null
-      error('config.dbName:', config.dbName)
+      error('config.dbName:     ', config.dbName)
       error('config.collection: ', config.collection)
-      error('config.mongo: ', config.mongo)
+      error('config.mongo:      ', config.mongo)
     }
     this.#blogId = config?.blogId ?? config.Id ?? config?.id ?? config?._id ?? null
     this.#blogHeaderImage = config.blogHeaderImage ?? config.headerImage ?? null
