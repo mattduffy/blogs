@@ -38,9 +38,13 @@ function slugify(t) {
  * @author Matthew Duffy <mattduffy@gmail.com>
  */
 class Blog {
+  #type = 'Blog'
+
   #db
 
   #mongo
+
+  #dbName
 
   #collection
 
@@ -70,6 +74,8 @@ class Blog {
 
   #blogPublic
 
+  #posts
+
   /**
    * Create an instance of Blog.
    * @summary Create an instance of Blog.
@@ -98,6 +104,7 @@ class Blog {
     this.#newBlog = config?.newBlog ?? false
     this.#redis = config?.redis ?? null
     this.#mongo = config?.mongo ?? config?.db ?? null
+    this.#dbName = config?.dbName ?? null
     if ((!config.collection) && (!this.#mongo?.s?.namespace?.collection)) {
       log('no collection provided: ', this.#mongo)
       this.#db = this.#mongo.db(config.dbName).collection(BLOGS)
@@ -125,9 +132,9 @@ class Blog {
     }
     this.#blogDescription = config?.blogDescription ?? config?.description ?? null
     this.#blogImages = config?.blogImages ?? config?.images ?? []
+    this.#posts = []
     // pseudo-protected properties
     this._blogPublic = config?.public ?? false
-    this._posts = []
   }
 
   /**
@@ -140,12 +147,16 @@ class Blog {
   async init() {
     const log = _log.extend('init')
     const error = _error.extend('init')
-    if (this.#blogOwnerId.constructor !== ObjectId) {
-      this.#blogOwnerId = new ObjectId(this.#blogOwnerId)
-    }
+    // if (this.#blogOwnerId.constructor !== ObjectId) {
+    //   this.#blogOwnerId = new ObjectId(this.#blogOwnerId)
+    // }
     try {
-      this._posts = Post.getAllPosts(this.#blogId, this.#db)
-      log(`blogId ${this.#blogId} has ${this._posts.length} post(s).`)
+      // this.#posts = Post.getAllPosts(this.#blogId, this.#db)
+      const found = await this.#db.findOne({ _id: this.#blogId })
+      log(found)
+      this.#posts = found?.posts
+      this._postCount = found.postCount
+      log(`blogId ${this.#blogId} has ${this.#posts.length} post(s).`)
     } catch (e) {
       error(e)
     }
@@ -273,7 +284,7 @@ class Blog {
           description: this.#blogDescription,
           keywords: Array.from(this.#blogKeywords),
           public: this._blogPublic,
-          postCount: this._posts.length,
+          postCount: this.#posts.length,
         },
       }
       if (this.#newBlog) {
@@ -291,7 +302,6 @@ class Blog {
       error(e)
       throw new Error(err, { cause: e })
     }
-
     // modifiedCount, upsertedCount, upsertedId
     // if (!saved?.insertedId || saved?.upsertedCount < 1 || saved?.modifiedCount < 1) {
     if (saved?.modifiedCount < 1 && saved?.upsertedCount < 1 && saved?.matchedCount < 1) {
@@ -321,6 +331,64 @@ class Blog {
       description: this.#blogDescription,
       keywords: Array.from(this.#blogKeywords),
       public: this._blogPublic,
+    }
+  }
+
+  /**
+   * Create a new blog post from the submitted details.
+   * @summary Create a new blog post from the submitted details.
+   * @author Matthew Duffy <mattduffy@gmail.com>
+   * @async
+   * @param { Object }
+   * @return { Post|Boolean }
+   */
+  async createPost(p) {
+    const log = _log.extend('createPost')
+    const error = _error.extend('createPost')
+    const o = p
+    o.newPost = true
+    o.dbName = ''
+    log('creating new post with: ', o)
+    let post
+    try {
+      // log(this.#mongo)
+      post = new Post(this.#mongo, o)
+      log('new post instance: ', post.id)
+      log(post)
+      post = await post.save()
+      log('new post saved: ', post.title)
+      await this.#updatePostArray(post.id, post.public)
+      if (!post) {
+        error('failed to create post.')
+        return false
+      }
+    } catch (e) {
+      error(e)
+      return false
+    }
+    log('blog post created: ', post.id)
+    return post
+  }
+
+  async #updatePostArray(id, pub) {
+    const log = _log.extend('updatePostArray')
+    const error = _error.extend('updatePostArray')
+    log(`updating the post array with: {id ${id}, public: ${pub} }`)
+    this.#posts.push({ id, public: pub })
+    try {
+      const filter = { _id: this.#blogId }
+      const update = {
+        $set: {
+          posts: this.#posts,
+          postCount: this.#posts.length,
+        },
+      }
+      await this.#db.updateOne(filter, update)
+    } catch (e) {
+      const msg = 'Failed to update post array'
+      error(msg)
+      error(e)
+      throw new Error(msg, { cause: e })
     }
   }
 
@@ -442,6 +510,10 @@ class Blog {
   set json(j) {
     this._null = null
     _error('no-op: set json()')
+  }
+
+  get [Symbol.toStringTag]() {
+    return this.#type
   }
 }
 
