@@ -24,6 +24,8 @@ class Blogs {
 
   static #error = _Error.extend('Blog')
 
+  #type = 'Blogs'
+
   #redis
 
   #mongo
@@ -132,6 +134,7 @@ class Blogs {
     try {
       found = await collection.findOne({ _id: new ObjectId(id) })
       log(`found: ${found.title}`)
+      found.mongo = mongo
       found.collection = collection
       found.redis = redis
       return new Blog(found)
@@ -277,6 +280,10 @@ class Blogs {
     const publicList = await collection.find().toArray()
     console.log(publicList)
     return publicList
+  }
+
+  get [Symbol.toStringTag]() {
+    return this.#type
   }
 }
 export {
