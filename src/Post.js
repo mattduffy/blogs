@@ -4,8 +4,8 @@
  * @file src/index.js The Post class definition file.
  */
 
-import path from 'node:path'
-import fs from 'node:fs/promises'
+// import path from 'node:path'
+// import fs from 'node:fs/promises'
 import { ObjectId } from '../lib/mongodb-client.js'
 import {
   _log as Log,
@@ -24,15 +24,21 @@ const MAX_SLUG_LENGTH = process.env.MAX_SLUG_LENGTH || 80
  * @author Matthew Duffy <mattduffy@gmail.com>
  */
 class Post {
+  #type = 'Post'
+
   #db
 
   #mongo
+
+  #dbName
 
   #collection
 
   #redis
 
   #newPost
+
+  #blogId
 
   #_id
 
@@ -54,6 +60,8 @@ class Post {
 
   #images
 
+  #public
+
   #postJson
 
   #noop
@@ -73,6 +81,7 @@ class Post {
    * @param { String|String[] } [o.authors] - An author's name, or an array of more than one authors of the post.
    * @param { Object[] } [o.images=null] - An optional array of images linked in the post.
    * @param { Boolean } [o.newPost] - True if creating a new post, false otherwise.
+   * @param { Boolean } [o.public] - True of false.
    * @param { Redis } redis - A redis client connection instance.
    * @return { Post } The populuated post instance.
    */
@@ -82,13 +91,17 @@ class Post {
     const error = _error.extend('constructor')
     this.#newPost = o?.newPost ?? false
     this.#redis = redis ?? null
-    this.#mongo = o?.mongo ?? o?.db ?? null
-    if ((!o.collection) && (!this.#mongo?.s?.namespace?.collection)) {
-      log('no collection provided: ', this.#mongo)
-      this.#db = this.#mongo.db(o.dbName).collection(POSTS)
+    // this.#mongo = o?.mongo ?? o?.db ?? null
+    this.#mongo = mongo
+    if ((!o?.collection) && (!this.#mongo?.s?.namespace?.collection)) {
+      // log('no collection provided: ', this.#mongo)
+      log('no collection provided: ')
+      this.#db = this.#mongo.collection(POSTS)
     } else if (o.collection?.collectionName !== undefined) {
       log('db.collection:', o.collection?.collectionName)
       this.#db = o.collection
+    } else if (o.collection.collectionName !== POSTS) {
+      this.#db = o.collection(POSTS)
     } else {
       this.#db = null
       error('config.dbName:     ', o.dbName)
@@ -97,21 +110,32 @@ class Post {
     }
     this.#newPost = !!o?.newPost
     this.#_id = (!o?.id) ? new ObjectId() : o.id
-    this.#title = o?.title ?? null
-    this.#slug = o?.slug ?? null
-    this.#description = o?.description ?? null
-    this.#content = o?.content
+    this.#title = o?.title ?? o?.postTitle ?? null
+    this.#slug = o?.slug ?? o?.postSlug ?? null
+    this.#description = o?.description ?? o?.postDescription ?? null
+    this.#content = o?.content ?? o?.postContent
     if (o?.keywords) {
       this.#keywords = new Set(o.keywords)
+    } else if (o?.postKeywords) {
+      this.#keywords = new Set(o.postKeywords)
     } else {
       this.#keywords = new Set()
     }
-    if (o.authors.constructor === String) {
-      this.#authors = [o.authors]
-    } else {
-      this.#authors = o.authors
+    if (o?.authors) {
+      if (o?.authors?.constructor === String) {
+        this.#authors = [o.authors]
+      } else {
+        this.#authors = o?.authors ?? null
+      }
+    } else if (o?.postAuthors) {
+      if (o?.postAuthors?.constructor === String) {
+        this.#authors = [o.postAuthors]
+      } else {
+        this.#authors = o?.postAuthors ?? null
+      }
     }
     this.#images = o?.images ?? []
+    this.#public = o?.public ?? false
   }
 
   /**
@@ -129,26 +153,70 @@ class Post {
       error(msg)
       throw new Error(msg)
     }
-    log(this.#newPost)
+    log(`is this a new post? ${this.#newPost}`)
     if (this.#newPost && !this.#_id) {
       this.#_id = new ObjectId()
       log('creating an new ObjectId _id..')
     }
     log(`the _id is ${this.#_id}`)
-    if (!this.#postJson) {
-      this.#postJson = await this.createPostJson()
+    if (this.#newPost) {
+      this.#createdOn = new Date()
+    } else {
+      this.#editedOn = new Date()
     }
-    log(this.#postJson)
+    if (!this.#postJson) {
+      this.#postJson = this.createPostJson()
+    }
+    log('post json doc: ', this.#postJson)
     let saved
     let filter
-    
+    let options
+    let update
+    try {
+      filter = { $and: [{ _id: this.#_id }, { blogId: this.#blogId }] }
+      options = { upsert: true }
+      update = {
+        $set: this.#postJson,
+      }
+      log('save filter: ', filter)
+      log('options:     ', options)
+      log('save doc:    ', update)
+      saved = await this.#db.updateOne(filter, update, options)
+      log(saved)
+    } catch (e) {
+      const err = 'Failed to save/update post.'
+      error(err)
+      error(e)
+      throw new Error(err, { cause: e })
+    }
+    return this
   }
 
   /**
-   *
+   * Create a json document with post details suitable for saving in db.
+   * @summary Create a json document with post details suitable for saving in db.
+   * @author Matthew Duffy <mattduffy@gmail.c>m>
+   * @return { Object } JSON document with post details.
    */
   createPostJson() {
-
+    const log = _log.extend('createPostJson')
+    if (this.#postJson) return this.#postJson
+    const tmp = {
+      _id: this.#_id,
+      blogId: this.#blogId,
+      title: this.#title,
+      slug: this.#slug,
+      description: this.#description,
+      content: this.#content,
+      keywords: Array.from(this.#keywords),
+      authors: this.#authors,
+      images: this.#images,
+      public: this.#public,
+      createdOn: this.#createdOn,
+      editedOn: this.#editedOn,
+    }
+    log(tmp)
+    return tmp
   }
 
   set id(Id) {
@@ -219,16 +287,40 @@ class Post {
     this.#keywords.add(k)
   }
 
-  set images(i) {
-    this.#noop = i
-  }
-
   get images() {
     return this.#images
   }
 
   set image(i) {
     this.#images.push(i)
+  }
+
+  set public(p) {
+    this.#public = p
+  }
+
+  get public() {
+    return this.#public
+  }
+
+  get blogId() {
+    return this.#blogId
+  }
+
+  get createdOn() {
+    return this.#createdOn
+  }
+
+  get editedOn() {
+    return this.#editedOn
+  }
+
+  get postJson() {
+    return this.#postJson
+  }
+
+  get [Symbol.toStringTag]() {
+    return this.#type
   }
 }
 export { Post }
