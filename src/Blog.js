@@ -169,11 +169,18 @@ class Blog {
    * @author Matthew Duffy <mattduffy@gmail.com>
    * @async
    * @param { Number } [start = 0] - Return collection of posts starting with post number <start>.
-   * @param { Number } [count = 10] - The max number of posts to return.
+   * @param { String|Number } [count = 'all'] - The max number of posts to return.
    * @return { Post|Post[] }
    */
-  async posts(start = 0, count = 10) {
-    return Post.get(this.#blogId, start, count)
+  async posts(start = 0, count = 'all') {
+    const log = _log.extend('posts')
+    log(`get posts: start ${start}, count ${count}`)
+    if (/all/i.test(count)) {
+      return this.#posts
+    }
+    const c = parseInt(count, 10)
+    const s = parseInt(start, 10)
+    return this.#posts.slice(s, (s + c))
   }
 
   /**
@@ -357,7 +364,15 @@ class Blog {
       log(post)
       post = await post.save()
       log('new post saved: ', post.title)
-      await this.#updatePostArray(post.id, post.public)
+      // await this.#updatePostArray(post.id, post.title, post.slug, post.createdOn, post.public)
+      const update = {
+        id: post.id,
+        title: post.title,
+        slug: post.slug,
+        createdOn: post.createdOn,
+        public: post.public,
+      }
+      await this.#updatePostArray(update)
       if (!post) {
         error('failed to create post.')
         return false
@@ -370,11 +385,18 @@ class Blog {
     return post
   }
 
-  async #updatePostArray(id, pub) {
+  /**
+   * Update the private post array with new post details.
+   * @summary Update the private post array with new post details.
+   * @author Matthew Duffy <mattduffy@gmail.com>
+   * @param { Object } u - New post details for post array.
+   * @return { undefined }
+   */
+  async #updatePostArray(u) {
     const log = _log.extend('updatePostArray')
     const error = _error.extend('updatePostArray')
-    log(`updating the post array with: {id ${id}, public: ${pub} }`)
-    this.#posts.push({ id, public: pub })
+    log(`updating the post array with: ${u}`)
+    this.#posts.push(u)
     try {
       const filter = { _id: this.#blogId }
       const update = {
