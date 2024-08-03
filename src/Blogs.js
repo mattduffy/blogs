@@ -100,7 +100,7 @@ class Blogs {
       log(found)
       found.collection = collection
       found.redis = redis
-      return new Blog(found)
+      return await new Blog(found).init()
     } catch (e) {
       error(e)
     }
