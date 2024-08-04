@@ -184,6 +184,41 @@ class Blog {
   }
 
   /**
+   * Get the post corresponding to this id.
+   * @summary Get the post corresponding to this id.
+   * @author Matthew Duffy <mattduffy@gmail.com>
+   * @async
+   * @param { String } id - The _id value for the post.
+   * @throws { Error } Throw an error if id not provided.
+   * @return { Post } The post with this id.
+   */
+  async getPost(id) {
+    const log = _log.extend('getPost')
+    const error = _error.extend('getPost')
+    if (!id) {
+      const msg = 'Missing required id parameter.'
+      error(msg)
+      throw new Error(msg)
+    }
+    let post
+    let query
+    try {
+      query = { _id: new ObjectId(id), blogId: new ObjectId(this.#blogId) }
+      // log(query)
+      const found = await this.#mongo.collection('posts').findOne(query)
+      // log('found post: ', found)
+      post = new Post(this.#mongo, found)
+      log(`found {${id}}, ${post.title}`)
+    } catch (e) {
+      const msg = `'Failed to retrieve post {id: ${id}}`
+      error(msg)
+      error(e)
+      throw new Error(msg, { cause: e })
+    }
+    return post
+  }
+
+  /**
    * Create a new blog post.
    * @summary Create a new blog post.
    * @author Matthew Duffy <mattduffy@gmail.com>
@@ -195,12 +230,12 @@ class Blog {
    * @param { string } p.content
    * @return { Post|Boolean }
    */
-  async newPost(p) {
-    const post = { ...p }
-    post.db = this.#mongo
-    post.redis = this.#redis
-    return Post.newPost(this.#blogId, post)
-  }
+  // async newPost(p) {
+  //   const post = { ...p }
+  //   post.db = this.#mongo
+  //   post.redis = this.#redis
+  //   return Post.newPost(this.#blogId, post)
+  // }
 
   /**
    * Delete the blog.
@@ -355,6 +390,7 @@ class Blog {
     const o = p
     o.newPost = true
     o.dbName = ''
+    o.blogId = this.#blogId
     log('creating new post with: ', o)
     let post
     try {
@@ -439,6 +475,10 @@ class Blog {
 
   set id(id) {
     this.#blogId = id
+  }
+
+  get slug() {
+    return this.#blogUrl
   }
 
   get url() {
