@@ -98,6 +98,7 @@ class Blogs {
       const filter = { creatorName: username }
       found = await collection.findOne(filter)
       log(found)
+      found.mongo = mongo
       found.collection = collection
       found.redis = redis
       return await new Blog(found).init()
@@ -137,7 +138,7 @@ class Blogs {
       found.mongo = mongo
       found.collection = collection
       found.redis = redis
-      return new Blog(found)
+      return await new Blog(found).init()
     } catch (e) {
       error(e)
     }
