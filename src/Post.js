@@ -110,6 +110,7 @@ class Post {
     }
     this.#newPost = !!o?.newPost
     this.#_id = (!o?.id) ? new ObjectId() : o.id
+    this.#blogId = o?.blogId ?? null
     this.#title = o?.title ?? o?.postTitle ?? null
     this.#slug = o?.slug ?? o?.postSlug ?? null
     this.#description = o?.description ?? o?.postDescription ?? null
