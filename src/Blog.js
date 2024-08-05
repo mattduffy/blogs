@@ -26,7 +26,7 @@ const MAX_SLUG_LENGTH = process.env.MAX_SLUG_LENGTH || 80
 function slugify(t) {
   if (!t) return null
   return t.toLowerCase() // convert to lowercase letters
-    .replace(/[^\p{Letter}\p{Number}\p{Separator}]/gv, '') // restrict by unicode character classes
+    .replace(/[^\p{Letter}\p{Number}\p{Separator}]/gv, ' ') // restrict by unicode character classes
     .replace(/\s+/g, '-') // collapse multiple spaces to single space and replace with dash
     .slice(0, MAX_SLUG_LENGTH) // truncate slug to global variable
 }
@@ -204,9 +204,13 @@ class Blog {
     let query
     try {
       query = { _id: new ObjectId(id), blogId: new ObjectId(this.#blogId) }
-      // log(query)
+      // query = { _id: new ObjectId(id), blogId: this.#blogId }
+      log(query)
       const found = await this.#mongo.collection('posts').findOne(query)
-      // log('found post: ', found)
+      log('found post: ', found)
+      if (!found) {
+        return false
+      }
       post = new Post(this.#mongo, found)
       log(`found {${id}}, ${post.title}`)
     } catch (e) {
@@ -217,25 +221,6 @@ class Blog {
     }
     return post
   }
-
-  /**
-   * Create a new blog post.
-   * @summary Create a new blog post.
-   * @author Matthew Duffy <mattduffy@gmail.com>
-   * @async
-   * @param { Object } p - The blog post content.
-   * @param { string } p.title
-   * @param { Date } p.created
-   * @param { string } p.author
-   * @param { string } p.content
-   * @return { Post|Boolean }
-   */
-  // async newPost(p) {
-  //   const post = { ...p }
-  //   post.db = this.#mongo
-  //   post.redis = this.#redis
-  //   return Post.newPost(this.#blogId, post)
-  // }
 
   /**
    * Delete the blog.
@@ -316,7 +301,7 @@ class Blog {
       log('replace doc: %o', this.#blogJson)
       const update = {
         $set: {
-          _id: this.#blogId,
+          _id: new ObjectId(this.#blogId),
           streamId: null, // this.#streamId,
           headerImageUrl: this.#blogHeaderImage,
           creatorId: this.#blogOwnerId,
@@ -377,6 +362,44 @@ class Blog {
   }
 
   /**
+   * Update the blog post from the submitted details.
+   * @summary Update the blog post from the submitted details.
+   * @author Matthew Duffy <mattduffy@gmail.com>
+   * @async
+   * @param { Object }
+   * @return { Post|Boolean }
+   */
+  async updatePost(p) {
+    const log = _log.extend('updatePost')
+    const error = _error.extend('upatePost')
+    const o = {
+      dbName: this.#dbName,
+      blogId: this.#blogId,
+      ...p,
+    }
+    log(`updating post {_id:${p.id}} with: `, o)
+    let post
+    try {
+      post = await new Post(this.#mongo, o).init()
+      log('updating post instance: ', post.id)
+      log(post)
+      post = await post.save()
+      log('post saved: ', post.title, post.editedOn)
+      if (!post) {
+        error('failed to create post.')
+        return false
+      }
+    } catch (e) {
+      const msg = 'Failed to update post.'
+      error(msg)
+      error(e)
+      throw new Error(msg, { cause: e })
+    }
+    log('blog post edited: ', post.id)
+    return post
+  }
+
+  /**
    * Create a new blog post from the submitted details.
    * @summary Create a new blog post from the submitted details.
    * @author Matthew Duffy <mattduffy@gmail.com>
@@ -387,10 +410,12 @@ class Blog {
   async createPost(p) {
     const log = _log.extend('createPost')
     const error = _error.extend('createPost')
-    const o = p
-    o.newPost = true
-    o.dbName = ''
-    o.blogId = this.#blogId
+    const o = {
+      newPost: true,
+      dbName: this.#dbName,
+      blogId: this.#blogId,
+      ...p,
+    }
     log('creating new post with: ', o)
     let post
     try {
