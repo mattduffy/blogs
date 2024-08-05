@@ -85,6 +85,7 @@ class Blogs {
     const error = this.#error.extend('getByUsername')
     if (!mongo) return false
     if (!username) return false
+    const dbName = mongo.s.namespace.db
     let collection
     if (!mongo.s.namespace.collection) {
       log('Setting db collection to: ', BLOGS)
@@ -99,6 +100,7 @@ class Blogs {
       found = await collection.findOne(filter)
       log(found)
       found.mongo = mongo
+      found.dbName = dbName
       found.collection = collection
       found.redis = redis
       return await new Blog(found).init()
@@ -123,6 +125,7 @@ class Blogs {
     const error = this.#error.extend('getById')
     if (!mongo) return false
     if (!id) return false
+    const dbName = mongo.s.namespace.db
     let collection
     if (!mongo.s.namespace.collection) {
       log('Setting db collection to: ', BLOGS)
@@ -136,6 +139,7 @@ class Blogs {
       found = await collection.findOne({ _id: new ObjectId(id) })
       log(`found: ${found.title}`)
       found.mongo = mongo
+      found.dbName = dbName
       found.collection = collection
       found.redis = redis
       return await new Blog(found).init()
