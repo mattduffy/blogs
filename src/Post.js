@@ -64,6 +64,8 @@ class Post {
 
   #postJson
 
+  #temp
+
   #noop
 
   /**
@@ -89,6 +91,7 @@ class Post {
     // private properties
     const log = _log.extend('constructor')
     const error = _error.extend('constructor')
+    this.#temp = o
     this.#newPost = o?.newPost ?? false
     this.#redis = redis ?? null
     // this.#mongo = o?.mongo ?? o?.db ?? null
@@ -109,7 +112,8 @@ class Post {
       error('config.mongo:      ', o.mongo)
     }
     this.#newPost = !!o?.newPost
-    this.#_id = (!o?.id) ? new ObjectId() : o.id
+    // this.#_id = (!o?.id || !o._id) ? new ObjectId() : o?.id ?? o?._id
+    this.#_id = o?._id ?? o?.id ?? new ObjectId()
     this.#blogId = o?.blogId ?? null
     this.#title = o?.title ?? o?.postTitle ?? null
     this.#slug = o?.slug ?? o?.postSlug ?? null
@@ -137,6 +141,39 @@ class Post {
     }
     this.#images = o?.images ?? []
     this.#public = o?.public ?? false
+  }
+
+  /**
+  */
+  async init() {
+    const log = _log.extend('init')
+    const error = _error.extend('init')
+    if (!this.#newPost) {
+      let found
+      try {
+        const query = { _id: new ObjectId(this.#_id) }
+        log(query)
+        found = await this.#db.findOne(query)
+        log(found)
+        if (!this.#temp?.authors) {
+          this.#authors = found.authors
+        }
+        if (!this.#temp?.createdOn) {
+          this.#createdOn = found.createdOn
+        }
+        if (!this.#temp?.editedOn) {
+          this.#editedOn = found.editedOn
+        }
+        if (!this.#temp?.images) {
+          this.#images = found.images
+        }
+      } catch (e) {
+        const msg = 'Failed to init post instance.'
+        error(msg)
+        throw new Error(msg, { cause: e })
+      }
+    }
+    return this
   }
 
   /**
@@ -174,10 +211,15 @@ class Post {
     let options
     let update
     try {
-      filter = { $and: [{ _id: this.#_id }, { blogId: this.#blogId }] }
-      options = { upsert: true }
+      filter = { $and: [{ _id: new ObjectId(this.#_id) }, { blogId: new ObjectId(this.#blogId) }] }
       update = {
         $set: this.#postJson,
+      }
+      if (this.#newPost) {
+        options = { upsert: true }
+      } else {
+        options = {}
+        delete update.$set._id
       }
       log('save filter: ', filter)
       log('options:     ', options)
@@ -190,6 +232,7 @@ class Post {
       error(e)
       throw new Error(err, { cause: e })
     }
+    log('updated and saved post: ', this)
     return this
   }
 
@@ -203,8 +246,8 @@ class Post {
     const log = _log.extend('createPostJson')
     if (this.#postJson) return this.#postJson
     const tmp = {
-      _id: this.#_id,
-      blogId: this.#blogId,
+      _id: new ObjectId(this.#_id),
+      blogId: new ObjectId(this.#blogId),
       title: this.#title,
       slug: this.#slug,
       description: this.#description,
