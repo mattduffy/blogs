@@ -184,6 +184,50 @@ class Blog {
   }
 
   /**
+   * Get range of public posts from <start> by <count>.
+   * @summary Get range of public posts from <start> by <count>.
+   * @author Matthew Duffy <mattduffy@gmail.com>
+   * @async
+   * @param { Number } s - The post to start from.
+   * @param { Number|String } c - The number of posts to retrieve.
+   * @param { String } [o='DESC'] - The sorting order to return posts in.
+   * @return { Post[]|Boolean } An array of posts or false.
+   */
+  async getPosts(s, c, o = 'DESC') {
+    const log = _log.extend('getPosts')
+    const error = _error.extend('getPosts')
+    const start = Number.parseInt(s, 10)
+    let count
+    if (c?.toLowerCase() === 'all') {
+      count = 'all'
+    } else {
+      count = Number.parseInt(c, 10)
+    }
+    const order = o.toLowerCase()
+    log(`start: ${start}, count: ${count}, order: ${order}`)
+    let posts
+    let query
+    let options
+    try {
+      query = { blogId: new ObjectId(this.#blogId), public: true }
+      options = { sort: { _id: -1 }, skip: start }
+      if (count !== 'all') {
+        options.limit = { limit: count }
+      }
+      log(query)
+      log(options)
+      posts = await this.#mongo.collection('posts').find(query, options).toArray()
+      log(posts)
+    } catch (e) {
+      const msg = `Failed to retrieve posts from ${start} by ${count}, ordered ${order}`
+      error(msg)
+      error(e)
+      return false
+    }
+    return posts
+  }
+
+  /**
    * Get the post corresponding to this id.
    * @summary Get the post corresponding to this id.
    * @author Matthew Duffy <mattduffy@gmail.com>
