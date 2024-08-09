@@ -191,9 +191,10 @@ class Blog {
    * @param { Number } s - The post to start from.
    * @param { Number|String } c - The number of posts to retrieve.
    * @param { String } [o='DESC'] - The sorting order to return posts in.
+   * @param { String } [v='PUBLIC'] - The visibility of posts to retrieve [PUBLIC|PRIVATE|ALL].
    * @return { Post[]|Boolean } An array of posts or false.
    */
-  async getPosts(s, c, o = 'DESC') {
+  async getPosts(s, c, o = 'DESC', v = 'PUBLIC') {
     const log = _log.extend('getPosts')
     const error = _error.extend('getPosts')
     const start = Number.parseInt(s, 10)
@@ -204,13 +205,27 @@ class Blog {
       count = Number.parseInt(c, 10)
     }
     const order = o.toLowerCase()
-    log(`start: ${start}, count: ${count}, order: ${order}`)
+    let visible
+    if (v.toLowerCase() === 'public') {
+      visible = true
+    } else if (v.toLowerCase() === 'private') {
+      visible = false
+    } else {
+      visible = undefined
+    }
+    log(`start: ${start}, count: ${count}, order: ${order}, public: ${visible}`)
     let posts
     let query
-    let options
+    const options = {}
     try {
-      query = { blogId: new ObjectId(this.#blogId), public: true }
-      options = { sort: { _id: -1 }, skip: start }
+      query = { blogId: new ObjectId(this.#blogId) }
+      if (visible === true) {
+        query.public = true
+      } else if (visible === false) {
+        query.public = false
+      }
+      options.sort = { _id: -1 }
+      options.skip = { skip: start }
       if (count !== 'all') {
         options.limit = { limit: count }
       }
