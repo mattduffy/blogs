@@ -436,13 +436,23 @@ class Blog {
       blogId: this.#blogId,
       ...p,
     }
-    log(`updating post {_id:${p.id}} with: `, o)
+    log(`updating post {_id:${p._id}} with: `, o)
     let post
     try {
       post = await new Post(this.#mongo, o).init()
       log('updating post instance: ', post.id)
       log(post)
       post = await post.save()
+      const update = {
+        id: new ObjectId(post.id),
+        title: post.title,
+        slug: post.slug,
+        createdOn: post.createdOn,
+        editedOn: post.editedOn,
+        public: post.public,
+      }
+      await this.#updatePostArray(update)
+      await this.save()
       log('post saved: ', post.title, post.editedOn)
       if (!post) {
         error('failed to create post.')
@@ -515,8 +525,17 @@ class Blog {
   async #updatePostArray(u) {
     const log = _log.extend('updatePostArray')
     const error = _error.extend('updatePostArray')
-    log(`updating the post array with: ${u}`)
-    this.#posts.push(u)
+    log('updating the post array with: ', u)
+    const found = this.#posts.findIndex((p) => u.id.equals(p.id))
+    if (found < 0) {
+      this.#posts.push(u)
+    } else {
+      this.#posts[found].title = u.title
+      this.#posts[found].slug = u.slug
+      this.#posts[found].createdOn = u.createdOn
+      this.#posts[found].editedOn = u.editedOn
+      this.#posts[found].public = u.public
+    }
     try {
       const filter = { _id: this.#blogId }
       const update = {
