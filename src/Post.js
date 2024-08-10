@@ -139,8 +139,8 @@ class Post {
         this.#authors = o?.postAuthors ?? null
       }
     }
-    this.#images = o?.images ?? []
-    this.#public = o?.public ?? false
+    this.#images = o?.images ?? o?.postImages ?? []
+    this.#public = o?.public ?? o?.postPublic ?? false
   }
 
   /**
