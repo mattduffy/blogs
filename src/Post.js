@@ -119,6 +119,8 @@ class Post {
     this.#slug = o?.slug ?? o?.postSlug ?? null
     this.#description = o?.description ?? o?.postDescription ?? null
     this.#content = o?.content ?? o?.postContent
+    this.#createdOn = o?.createdOn ?? o?.postCreatedOn ?? null
+    this.#editedOn = o?.editedOn ?? o?.postEditedOn ?? null
     if (o?.keywords) {
       this.#keywords = new Set(o.keywords)
     } else if (o?.postKeywords) {
@@ -269,6 +271,10 @@ class Post {
 
   get id() {
     return this.#_id
+  }
+
+  get authors() {
+    return this.#authors
   }
 
   set title(t) {
