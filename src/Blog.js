@@ -243,6 +243,44 @@ class Blog {
   }
 
   /**
+   * Get the post corresponding to this url/title slug.
+   * @summary Get the post corresponding to this url/title slug.
+   * @author Matthew Duffy <mattduffy@gmail.com>
+   * @async
+   * @param { String } s - The slug value for the post.
+   * @throws { Error } Throw an error if id not provided.
+   * @return { Post } The post with this slug.
+   */
+  async getPostBySlug(s) {
+    const log = _log.extend('get-post-by-slug')
+    const error = _error.extend('get-post-by-slug')
+    if (!s) {
+      const msg = 'Missing required slug parameter.'
+      error(msg)
+      throw new Error(msg)
+    }
+    let post
+    let query
+    try {
+      query = { slug: s, blogId: new ObjectId(this.#blogId) }
+      log(query)
+      const found = await this.#mongo.collection('posts').findOne(query)
+      log('found post: ', found)
+      if (!found) {
+        return false
+      }
+      post = await new Post(this.#mongo, found).init()
+      log(`found {${post.id}}, ${post.slug}`)
+    } catch (e) {
+      const msg = `'Failed to retrieve post {slug: ${s}}`
+      error(msg)
+      error(e)
+      throw new Error(msg, { cause: e })
+    }
+    return post
+  }
+
+  /**
    * Get the post corresponding to this id.
    * @summary Get the post corresponding to this id.
    * @author Matthew Duffy <mattduffy@gmail.com>
@@ -252,8 +290,8 @@ class Blog {
    * @return { Post } The post with this id.
    */
   async getPost(id) {
-    const log = _log.extend('getPost')
-    const error = _error.extend('getPost')
+    const log = _log.extend('get-post')
+    const error = _error.extend('get-post')
     if (!id) {
       const msg = 'Missing required id parameter.'
       error(msg)
