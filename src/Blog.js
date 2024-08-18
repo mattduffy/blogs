@@ -56,7 +56,9 @@ class Blog {
 
   #blogUrl
 
-  #blogHeaderImage
+  #blogHeaderImageSmall
+
+  #blogHeaderImageBig
 
   #blogTitle
 
@@ -87,7 +89,8 @@ class Blog {
    * @param { Object } config.redis - An instance of a redis connection.
    * @param { string } config.blogId - A string of the unique blog id.
    * @param { string } config.blogUrl - Path portion of public url for the blog.
-   * @param { string } config.blogHeaderImage - Path portion of the url to show blog preview image.
+   * @param { string } config.blogHeaderImageSmall - Path portion of the url to show small blog preview image.
+   * @param { string } config.blogHeaderImageBig - Path portion of the url to show big blog preview image.
    * @param { string } config.blogTitle - The title of the blog.
    * @param { ObjectId|string } config.blogOwerId - The ObjectId value of the blog owner.
    * @param { string } config.blogOwerName - The name of the blog owner.
@@ -118,7 +121,8 @@ class Blog {
       error('config.mongo:      ', config.mongo)
     }
     this.#blogId = config?.blogId ?? config.Id ?? config?.id ?? config?._id ?? null
-    this.#blogHeaderImage = config.blogHeaderImage ?? config.headerImage ?? null
+    this.#blogHeaderImageSmall = config.blogHeaderImageSmall ?? config.headerImageSmall ?? null
+    this.#blogHeaderImageBig = config.blogHeaderImageBig ?? config.headerImageBig ?? null
     this.#blogTitle = config?.blogTitle ?? config.title ?? null
     this.#blogUrl = config?.blogUrl ?? config?.url ?? config?.slug ?? slugify(this.#blogTitle) ?? null
     this.#blogOwnerId = config?.blogOwnerId ?? config.ownerId ?? config?.creatorId ?? null
@@ -156,6 +160,8 @@ class Blog {
       log(found)
       this.#posts = found?.posts
       this._postCount = found.postCount
+      this.#blogHeaderImageSmall = found.headerImageSmallUrl
+      this.#blogHeaderImageBig = found.headerImageBigUrl
       log(`blogId ${this.#blogId} has ${this.#posts.length} post(s).`)
     } catch (e) {
       error(e)
@@ -400,7 +406,8 @@ class Blog {
         $set: {
           _id: new ObjectId(this.#blogId),
           streamId: null, // this.#streamId,
-          headerImageUrl: this.#blogHeaderImage,
+          headerImageSmallUrl: this.#blogHeaderImageSmall,
+          headerImageBigUrl: this.#blogHeaderImageBig,
           creatorId: this.#blogOwnerId,
           creatorName: this.#blogOwnerName,
           title: this.#blogTitle,
@@ -448,7 +455,8 @@ class Blog {
   async createBlogJson() {
     return {
       _id: this.#blogId,
-      headerImageUrl: this.#blogHeaderImage,
+      headerImageSmallUrl: this.#blogHeaderImageSmall,
+      headerImageBigUrl: this.#blogHeaderImageBig,
       creator: this.#blogOwnerId,
       title: this.#blogTitle,
       url: this.#blogUrl,
@@ -695,6 +703,24 @@ class Blog {
 
   set public(isPublic = false) {
     this._blogPublic = isPublic
+  }
+
+  get headerImageSmall() {
+    _log(`small header image ${this.#blogHeaderImageSmall}`)
+    return this.#blogHeaderImageSmall
+  }
+
+  set headerImageSmall(small) {
+    this.#blogHeaderImageSmall = small
+  }
+
+  get headerImageBig() {
+    _log(`big header image ${this.#blogHeaderImageBig}`)
+    return this.#blogHeaderImageBig
+  }
+
+  set headerImageBig(big) {
+    this.#blogHeaderImageBig = big
   }
 
   async getJson() {
