@@ -238,6 +238,13 @@ class Blog {
       log(query)
       log(options)
       posts = await this.#mongo.collection('posts').find(query, options).toArray()
+      // TODO
+      // iterate over posts array and instantiate a Post object for each array element.
+      //
+      // Posts = posts.map((p) => {
+      //  return new Post(p).init()
+      // })
+      //
       log(posts)
     } catch (e) {
       const msg = `Failed to retrieve posts from ${start} by ${count}, ordered ${order}`
@@ -283,7 +290,7 @@ class Blog {
       error(e)
       throw new Error(msg, { cause: e })
     }
-    return post
+    return post.init()
   }
 
   /**
@@ -322,7 +329,7 @@ class Blog {
       error(e)
       throw new Error(msg, { cause: e })
     }
-    return post
+    return post.init()
   }
 
   /**
