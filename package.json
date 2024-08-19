@@ -38,6 +38,7 @@
   "dependencies": {
     "@mattduffy/exiftool": "file:../exiftool",
     "@mattduffy/unpacker": "file:../unpacker",
+    "@mattduffy/albums": "file:../albums",
     "debug": "4.3.4"
   },
   "keywords": []
