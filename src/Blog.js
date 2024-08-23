@@ -5,6 +5,7 @@
  */
 
 import { Post } from './Post.js'
+import { Album } from '@mattduffy/albums' // eslint-disable-line
 import { ObjectId } from '../lib/mongodb-client.js'
 import {
   _log as Log,
@@ -503,6 +504,7 @@ class Blog {
         createdOn: post.createdOn,
         editedOn: post.editedOn,
         public: post.public,
+        img: post.previewImg,
       }
       await this.#updatePostArray(update)
       await this.save()
@@ -554,6 +556,7 @@ class Blog {
         slug: post.slug,
         createdOn: post.createdOn,
         public: post.public,
+        img: post.previewImg,
       }
       await this.#updatePostArray(update)
       if (!post) {

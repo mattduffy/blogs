@@ -6,6 +6,8 @@
 
 // import path from 'node:path'
 // import fs from 'node:fs/promises'
+import { Album } from '@mattduffy/albums' // eslint-disable-line import/no-unresolved
+import { Albums } from '@mattduffy/albums/Albums' // eslint-disable-line import/no-unresolved
 import { ObjectId } from '../lib/mongodb-client.js'
 import {
   _log as Log,
@@ -60,6 +62,12 @@ class Post {
 
   #images
 
+  #album
+
+  #albumId
+
+  #albumName
+
   #public
 
   #postJson
@@ -82,6 +90,9 @@ class Post {
    * @param { String[] } [o.keywords=null] - An optinoal array of keywords for the post.
    * @param { String|String[] } [o.authors] - An author's name, or an array of more than one authors of the post.
    * @param { Object[] } [o.images=null] - An optional array of images linked in the post.
+   * @param { Album } [o.album=null] - An optional album where the images are stored.
+   * @param { String } [o.albumId=null] - An optional album _id value.
+   * @param { String } [o.albumName=null] - An optional album name to be created for the images.
    * @param { Boolean } [o.newPost] - True if creating a new post, false otherwise.
    * @param { Boolean } [o.public] - True of false.
    * @param { Redis } redis - A redis client connection instance.
@@ -141,6 +152,8 @@ class Post {
         this.#authors = o?.postAuthors ?? null
       }
     }
+    this.#albumId = o?.albumId ?? o?.postAlbumId ?? null
+    this.#albumName = o?.albumName ?? o?.postAlbumName ?? null
     this.#images = o?.images ?? o?.postImages ?? []
     this.#public = o?.public ?? o?.postPublic ?? false
   }
@@ -172,6 +185,14 @@ class Post {
       } catch (e) {
         const msg = 'Failed to init post instance.'
         error(msg)
+        throw new Error(msg, { cause: e })
+      }
+      try {
+        this._album = await Albums.getById(this.#albumId)
+      } catch (e) {
+        const msg = `Failed to retrieve album: ${this.#albumId}`
+        error(msg)
+        error(e)
         throw new Error(msg, { cause: e })
       }
     }
@@ -343,6 +364,14 @@ class Post {
 
   set image(i) {
     this.#images.push(i)
+  }
+
+  get previewImg() {
+    return this.#images[0]
+  }
+
+  set previewImg(i) {
+    this.#images[0] = i
   }
 
   set public(p) {
