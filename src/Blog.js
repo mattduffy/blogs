@@ -549,7 +549,6 @@ class Blog {
       log(post)
       post = await post.save()
       log('new post saved: ', post.title)
-      // await this.#updatePostArray(post.id, post.title, post.slug, post.createdOn, post.public)
       const update = {
         id: post.id,
         title: post.title,
@@ -568,7 +567,7 @@ class Blog {
       return false
     }
     log('blog post created: ', post.id)
-    return post
+    return post.init()
   }
 
   /**

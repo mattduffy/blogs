@@ -200,6 +200,42 @@ class Post {
   }
 
   /**
+   * Create an album to store images for this post.
+   * @summary Create an album to store image for this post.
+   * @author Matthew Duffy <mattduffy@gmail.com>
+   * @async
+   * @param { Object } config - An object literal with album config values.
+   * @param { Collection } config.collection - A client connection to the albums collection.
+   * @param { String } config.rootDir - A path to the root of the users galleries directory.
+   * @param { String } config.albumUrl - A path to the album directory inside galleryRoot.
+   * @param { String } config.albumOwner - The name of the owner of the gallery/album.
+   * @param { String } config.albumDescription - A short description of the gallery/album.
+   * @return { undefined }
+   */
+  async createAlbum(config) {
+    const log = _log.extend('createAlbum')
+    const error = _error.extend('createAlbum')
+    try {
+      const name = `Post-${this.#slug}`
+      const c = {
+        ...config,
+        albumName: name,
+        rootDir: `${config.rootDir}${name}`,
+        new: true,
+        public: false,
+      }
+      this.#album = await new Album(c)
+      log(`Created new post album with name ${c.albumName}`)
+      this.#albumId = this.#album.id
+    } catch (e) {
+      const msg = 'Failed to create post album.'
+      error(msg)
+      error(e)
+      throw new Error(msg, { cause: e })
+    }
+  }
+
+  /**
    * Save the post to db.
    * @summary Save the post to db.
    * @author Matthew Duffy <mattduffy@gmail.com>
