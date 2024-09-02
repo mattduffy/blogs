@@ -143,6 +143,20 @@ class Blog {
   }
 
   /**
+   * A custom toString() method.
+   * @summary A custom toString() method.
+   * @author Matthew Dufffy <mattduffy@gmail.com>
+   * @return { String }
+   */
+  toString() {
+    const p = 15
+    const str = `${'title:'.padEnd(p)} ${this.#blogTitle}\n`
+              + `${'id:'.padEnd(p)} ObjectId(${this.#blogId})\n`
+              + `${'author:'.padEnd(p)} ${this.#blogOwnerName}\n`
+              + `${'# of posts:'.padEnd(p)} ${this.#posts.length}`
+    return str
+  }
+  /**
    * Initialize the blog instance with an array of all post metadata.
    * @summary Initialize the blog instance with an array of all post metadata.
    * @author Matthew Duffy <mattduffy@gmail.com>
