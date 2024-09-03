@@ -8,6 +8,7 @@
 // import fs from 'node:fs/promises'
 import { Album } from '@mattduffy/albums' // eslint-disable-line import/no-unresolved
 import { Albums } from '@mattduffy/albums/Albums' // eslint-disable-line import/no-unresolved
+import { slugify } from './Blog.js'
 import { ObjectId } from '../lib/mongodb-client.js'
 import {
   _log as Log,
@@ -220,11 +221,14 @@ class Post {
       const c = {
         ...config,
         albumName: name,
-        rootDir: `${config.rootDir}${name}`,
+        slug: slugify(name),
+        rootDir: config.rootDir,
+        albumDir: name,
         new: true,
         public: false,
       }
-      this.#album = await new Album(c)
+      log('customizing post album config: ', c)
+      this.#album = await new Album(c).init()
       log(`Created new post album with name ${c.albumName}`)
       this.#albumId = this.#album.id
     } catch (e) {
@@ -233,6 +237,7 @@ class Post {
       error(e)
       throw new Error(msg, { cause: e })
     }
+    return this.#album
   }
 
   /**
