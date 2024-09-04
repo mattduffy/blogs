@@ -5,7 +5,7 @@
  */
 
 // import path from 'node:path'
-// import fs from 'node:fs/promises'
+import { mkdir } from 'node:fs/promises'
 import { Album } from '@mattduffy/albums' // eslint-disable-line import/no-unresolved
 import { Albums } from '@mattduffy/albums/Albums' // eslint-disable-line import/no-unresolved
 import { slugify } from './Blog.js'
@@ -217,17 +217,19 @@ class Post {
     const log = _log.extend('createAlbum')
     const error = _error.extend('createAlbum')
     try {
-      const name = `Post-${this.#slug}`
+      const name = `post-${this.#slug}`
       const c = {
         ...config,
         albumName: name,
         slug: slugify(name),
         rootDir: config.rootDir,
-        albumDir: name,
+        albumDir: `${config.rootDir}/${name}`,
         new: true,
         public: false,
       }
       log('customizing post album config: ', c)
+      log(`making album directory: ${c.albumDir}`)
+      await mkdir(c.albumDir, { recursive: true })
       this.#album = await new Album(c).init()
       log(`Created new post album with name ${c.albumName}`)
       this.#albumId = this.#album.id
