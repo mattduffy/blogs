@@ -8,7 +8,7 @@
 import { mkdir } from 'node:fs/promises'
 import { Album } from '@mattduffy/albums' // eslint-disable-line import/no-unresolved
 import { Albums } from '@mattduffy/albums/Albums' // eslint-disable-line import/no-unresolved
-import { slugify } from './Blog.js'
+import { slugify, MAX_SLUG_LENGTH } from './utils/slugify.js'
 import { ObjectId } from '../lib/mongodb-client.js'
 import {
   _log as Log,
@@ -18,7 +18,7 @@ import {
 const _log = Log.extend('post')
 const _error = _Error.extend('post')
 const POSTS = 'posts'
-const MAX_SLUG_LENGTH = process.env.MAX_SLUG_LENGTH || 80
+// const MAX_SLUG_LENGTH = process.env.MAX_SLUG_LENGTH || 80
 
 /**
  * A class to model the shape and properties of a single blog post.
@@ -230,7 +230,8 @@ class Post {
       log('customizing post album config: ', c)
       log(`making album directory: ${c.albumDir}`)
       await mkdir(c.albumDir, { recursive: true })
-      this.#album = await new Album(c).init()
+      // this.#album = await new Album(c).init()
+      this.#album = await new Album(c)
       log(`Created new post album with name ${c.albumName}`)
       this.#albumId = this.#album.id
     } catch (e) {
