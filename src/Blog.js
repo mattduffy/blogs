@@ -16,6 +16,7 @@ import {
 const _log = Log.extend('Blog')
 const _error = _Error.extend('Blog')
 const BLOGS = 'blogs'
+_log(`slug length max: ${MAX_SLUG_LENGTH}`)
 // const MAX_SLUG_LENGTH = process.env.MAX_SLUG_LENGTH || 80
 
 // /**

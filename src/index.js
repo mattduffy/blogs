@@ -4,9 +4,10 @@
  * @file src/index.js The Blog class definition file.
  */
 
-import { Blog, slugify } from './Blog.js'
-import { Post } from './Post.js'
 import { Blogs } from './Blogs.js'
+import { Blog } from './Blog.js'
+import { Post } from './Post.js'
+import { slugify } from './utils/slugify.js'
 // import { ObjectId } from '../lib/mongodb-client.js'
 // import {
 //   _log as Log,

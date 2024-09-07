@@ -18,7 +18,7 @@ import {
 const _log = Log.extend('post')
 const _error = _Error.extend('post')
 const POSTS = 'posts'
-// const MAX_SLUG_LENGTH = process.env.MAX_SLUG_LENGTH || 80
+_log(`slug length max: ${MAX_SLUG_LENGTH}`)
 
 /**
  * A class to model the shape and properties of a single blog post.
@@ -230,8 +230,8 @@ class Post {
       log('customizing post album config: ', c)
       log(`making album directory: ${c.albumDir}`)
       await mkdir(c.albumDir, { recursive: true })
-      // this.#album = await new Album(c).init()
-      this.#album = await new Album(c)
+      const skip = { sizes: true, metadata: true }
+      this.#album = await new Album(c).init(null, skip)
       log(`Created new post album with name ${c.albumName}`)
       this.#albumId = this.#album.id
     } catch (e) {
