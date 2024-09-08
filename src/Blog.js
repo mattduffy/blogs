@@ -158,6 +158,7 @@ class Blog {
               + `${'# of posts:'.padEnd(p)} ${this.#posts.length}`
     return str
   }
+
   /**
    * Initialize the blog instance with an array of all post metadata.
    * @summary Initialize the blog instance with an array of all post metadata.
