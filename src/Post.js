@@ -224,6 +224,7 @@ class Post {
         slug: slugify(name),
         rootDir: config.rootDir,
         albumDir: `${config.rootDir}/${name}`,
+        albumUrl: `@${config.owner}/galleries/${slugify(name)}`,
         new: true,
         public: false,
       }
