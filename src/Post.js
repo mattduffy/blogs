@@ -110,7 +110,7 @@ class Post {
     this.#mongo = mongo
     if ((!o?.collection) && (!this.#mongo?.s?.namespace?.collection)) {
       // log('no collection provided: ', this.#mongo)
-      log('no collection provided: ')
+      log('no collection provided, using: ', POSTS)
       this.#db = this.#mongo.collection(POSTS)
     } else if (o.collection?.collectionName !== undefined) {
       log('db.collection:', o.collection?.collectionName)
@@ -124,7 +124,6 @@ class Post {
       error('config.mongo:      ', o.mongo)
     }
     this.#newPost = !!o?.newPost
-    // this.#_id = (!o?.id || !o._id) ? new ObjectId() : o?.id ?? o?._id
     this.#_id = o?._id ?? o?.id ?? new ObjectId()
     this.#blogId = o?.blogId ?? null
     this.#title = o?.title ?? o?.postTitle ?? null
@@ -157,6 +156,24 @@ class Post {
     this.#albumName = o?.albumName ?? o?.postAlbumName ?? null
     this.#images = o?.images ?? o?.postImages ?? []
     this.#public = o?.public ?? o?.postPublic ?? false
+  }
+
+  /**
+   * A custom toString() method.
+   * @summary A custom toString() method.
+   * @author Matthew Duffy <mattduffy@gmail.com>
+   * @return { String }
+   */
+  toString() {
+    const p = 16
+    const str = 'Post configuration details:\n'
+              + `${'title:'.padEnd(p)} ${this.title}\n`
+              + `${'id:'.padEnd(p)} ObjectId(${this.#_id})\n`
+              + `${'authors:'.padEnd(p)} ${this.#authors}\n`
+              + `${'slug:'.padEnd(p)} ${this.#slug}\n`
+              + `${'created:'.padEnd(p)} ${this.#createdOn}\n`
+              + `${'album id:'.padEnd(p)} ObjectId(${this.#albumId})\n`
+    return str
   }
 
   /**
@@ -227,14 +244,16 @@ class Post {
         albumUrl: `@${config.owner}/galleries/${slugify(name)}`,
         new: true,
         public: false,
+        postId: this.#_id,
       }
       log('customizing post album config: ', c)
       log(`making album directory: ${c.albumDir}`)
       await mkdir(c.albumDir, { recursive: true })
       const skip = { sizes: true, metadata: true }
       this.#album = await new Album(c).init(null, skip)
-      log(`Created new post album with name ${c.albumName}`)
-      this.#albumId = this.#album.id
+      log(`Created new post album with name ${c.albumName}, _id: ${this.#album.id}`)
+      // album._id not available yet
+      // this.#albumId = this.#album.id
     } catch (e) {
       const msg = 'Failed to create post album.'
       error(msg)
@@ -316,6 +335,7 @@ class Post {
     const tmp = {
       _id: new ObjectId(this.#_id),
       blogId: new ObjectId(this.#blogId),
+      albumId: new ObjectId(this.#albumId),
       title: this.#title,
       slug: this.#slug,
       description: this.#description,
@@ -403,12 +423,27 @@ class Post {
     this.#keywords.add(k)
   }
 
+  set albumId(id) {
+    this.#albumId = id
+  }
+
+  get albumId() {
+    return this.#albumId
+  }
+
   get images() {
     return this.#images
   }
 
   set image(i) {
-    this.#images.push(i)
+    const len = this.#images.length
+    if (this.#images[0] !== undefined) {
+      this.#images.push(i)
+    } else if (len === 0) {
+      this.#images[1] = i
+    } else {
+      this.#images.push(i)
+    }
   }
 
   get previewImg() {
