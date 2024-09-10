@@ -104,7 +104,6 @@ class Post {
     const log = _log.extend('constructor')
     const error = _error.extend('constructor')
     this.#temp = o
-    this.#newPost = o?.newPost ?? false
     this.#redis = redis ?? null
     // this.#mongo = o?.mongo ?? o?.db ?? null
     this.#mongo = mongo
@@ -123,7 +122,8 @@ class Post {
       error('config.collection: ', o.collection)
       error('config.mongo:      ', o.mongo)
     }
-    this.#newPost = !!o?.newPost
+    // this.#newPost = !!o?.newPost
+    this.#newPost = o?.newPost ?? false
     this.#_id = o?._id ?? o?.id ?? new ObjectId()
     this.#blogId = o?.blogId ?? null
     this.#title = o?.title ?? o?.postTitle ?? null
@@ -169,6 +169,7 @@ class Post {
     const str = 'Post configuration details:\n'
               + `${'title:'.padEnd(p)} ${this.title}\n`
               + `${'id:'.padEnd(p)} ObjectId(${this.#_id})\n`
+              + `${'new post?'.padEnd(p)} ${this.#newPost}\n`
               + `${'authors:'.padEnd(p)} ${this.#authors}\n`
               + `${'slug:'.padEnd(p)} ${this.#slug}\n`
               + `${'created:'.padEnd(p)} ${this.#createdOn}\n`
@@ -252,6 +253,7 @@ class Post {
       const skip = { sizes: true, metadata: true }
       this.#album = await new Album(c).init(null, skip)
       log(`Created new post album with name ${c.albumName}, _id: ${this.#album.id}`)
+      log(this.#album.toString())
       // album._id not available yet
       // this.#albumId = this.#album.id
     } catch (e) {
@@ -284,14 +286,17 @@ class Post {
       log('creating an new ObjectId _id..')
     }
     log(`the _id is ${this.#_id}`)
+    log(`the album.id is ${this.#albumId}`)
     if (this.#newPost) {
       this.#createdOn = new Date()
     } else {
       this.#editedOn = new Date()
     }
-    if (!this.#postJson) {
-      this.#postJson = this.createPostJson()
-    }
+    // if (!this.#postJson) {
+    //   this.#postJson = this.createPostJson()
+    // }
+    log('creating the post json document.')
+    this.#postJson = this.createPostJson()
     log('post json doc: ', this.#postJson)
     let saved
     let filter
@@ -319,7 +324,8 @@ class Post {
       error(e)
       throw new Error(err, { cause: e })
     }
-    log('updated and saved post: ', this)
+    this.#newPost = false
+    log('updated and saved post: ', this.toString())
     return this
   }
 
@@ -331,11 +337,11 @@ class Post {
    */
   createPostJson() {
     const log = _log.extend('createPostJson')
-    if (this.#postJson) return this.#postJson
+    // if (this.#postJson) return this.#postJson
     const tmp = {
       _id: new ObjectId(this.#_id),
       blogId: new ObjectId(this.#blogId),
-      albumId: new ObjectId(this.#albumId),
+      // albumId: new ObjectId(this.#albumId),
       title: this.#title,
       slug: this.#slug,
       description: this.#description,
@@ -347,6 +353,7 @@ class Post {
       createdOn: this.#createdOn,
       editedOn: this.#editedOn,
     }
+    tmp.albumId = (this.#albumId) ? new ObjectId(this.#albumId) : null
     log(tmp)
     return tmp
   }
@@ -424,10 +431,13 @@ class Post {
   }
 
   set albumId(id) {
+    _log(`setting album id: ${id}`)
     this.#albumId = id
+    _log(`set album id: ${this.#albumId}`)
   }
 
   get albumId() {
+    _log(`returning album id: ${this.#albumId}`)
     return this.#albumId
   }
 
