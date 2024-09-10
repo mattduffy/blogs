@@ -547,9 +547,10 @@ class Blog {
       // log(this.#mongo)
       post = new Post(this.#mongo, o)
       log('new post instance: ', post.id)
-      log(post)
+      log(`${post}`)
       post = await post.save()
-      log('new post saved: ', post.title)
+      log(`${post}`)
+      // log('new post saved: ', post.title)
       const update = {
         id: post.id,
         title: post.title,
@@ -572,6 +573,13 @@ class Blog {
   }
 
   /**
+   *
+   */
+  async updatePostArray(u) {
+    return this.#updatePostArray(u)
+  }
+
+  /**
    * Update the private post array with new post details.
    * @summary Update the private post array with new post details.
    * @author Matthew Duffy <mattduffy@gmail.com>
@@ -586,6 +594,7 @@ class Blog {
     if (found < 0) {
       this.#posts.push(u)
     } else {
+      this.#posts[found].id = u.id
       this.#posts[found].title = u.title
       this.#posts[found].slug = u.slug
       this.#posts[found].createdOn = u.createdOn
@@ -601,7 +610,8 @@ class Blog {
           postCount: this.#posts.length,
         },
       }
-      await this.#db.updateOne(filter, update)
+      const saved = await this.#db.updateOne(filter, update)
+      return saved
     } catch (e) {
       const msg = 'Failed to update post array'
       error(msg)
