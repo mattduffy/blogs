@@ -166,14 +166,16 @@ class Post {
    */
   toString() {
     const p = 16
-    const str = 'Post configuration details:\n'
-              + `${'title:'.padEnd(p)} ${this.title}\n`
-              + `${'id:'.padEnd(p)} ObjectId(${this.#_id})\n`
-              + `${'new post?'.padEnd(p)} ${this.#newPost}\n`
-              + `${'authors:'.padEnd(p)} ${this.#authors}\n`
-              + `${'slug:'.padEnd(p)} ${this.#slug}\n`
-              + `${'created:'.padEnd(p)} ${this.#createdOn}\n`
-              + `${'album id:'.padEnd(p)} ObjectId(${this.#albumId})\n`
+    let str = 'Post configuration details:\n'
+              + `${'title:'.padEnd(p)} ${this.title}`
+              + `\n{'id:'.padEnd(p)} ObjectId(${this.#_id})`
+              + `\n{'new post?'.padEnd(p)} ${this.#newPost}`
+              + `\n{'authors:'.padEnd(p)} ${this.#authors}`
+              + `\n{'slug:'.padEnd(p)} ${this.#slug}`
+              + `\n{'created:'.padEnd(p)} ${this.#createdOn}`
+    if (this.#albumId) {
+      str += `\n${'album id:'.padEnd(p)} ObjectId(${this.#albumId})`
+    }
     return str
   }
 
@@ -189,6 +191,9 @@ class Post {
         log(query)
         found = await this.#db.findOne(query)
         log(found)
+        if (!this.#temp?.title) {
+          this.#title = found.title
+        }
         if (!this.#temp?.authors) {
           this.#authors = found.authors
         }
@@ -200,6 +205,9 @@ class Post {
         }
         if (!this.#temp?.images) {
           this.#images = found.images
+        }
+        if (!this.#temp?.slug) {
+          this.#slug = found.slug
         }
       } catch (e) {
         const msg = 'Failed to init post instance.'
