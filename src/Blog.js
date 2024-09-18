@@ -496,8 +496,8 @@ class Blog {
     try {
       post = await new Post(this.#mongo, o).init()
       log('updating post instance: ', post.id)
-      log(post)
-      // post = await post.save()
+      log(`${post}`)
+      post = await post.save()
       const update = {
         id: new ObjectId(post.id),
         title: post.title,
@@ -509,7 +509,7 @@ class Blog {
       }
       await this.#updatePostArray(update)
       await this.save()
-      log('post saved: ', post.title, post.editedOn)
+      log('post saved: ', post.toString())
       if (!post) {
         error('failed to create post.')
         return false
