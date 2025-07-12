@@ -36,9 +36,9 @@
     "redis-om": "0.3.6"
   },
   "dependencies": {
+    "@mattduffy/albums": "file:../albums",
     "@mattduffy/exiftool": "file:../exiftool",
     "@mattduffy/unpacker": "file:../unpacker",
-    "@mattduffy/albums": "file:../albums",
     "debug": "4.3.4"
   },
   "keywords": []
