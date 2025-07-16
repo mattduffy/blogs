@@ -81,7 +81,8 @@ class Post {
    * Create an instance of a blog post.
    * @summary Create an instance of a blog post.
    * @author Matthew Duffy <mattdufffy@gmail.com>
-   * @param { MongoClient|Collection } mongo - Either a mongodb client connection or its blog collection.
+   * @param { MongoClient|Collection } mongo - Either a mongodb client connection or its blog
+   * collection.
    * @param { Object } o - An object with post details to create instance.
    * @param { ObjectId } [o.id] - The ObjectId of the post in the db.
    * @param { String } [o.title] - The title of the post.
@@ -89,7 +90,8 @@ class Post {
    * @param { String } [o.description=null] - An optional text description of the post.
    * @param { String } [o.content] - The main text content of the post.
    * @param { String[] } [o.keywords=null] - An optinoal array of keywords for the post.
-   * @param { String|String[] } [o.authors] - An author's name, or an array of more than one authors of the post.
+   * @param { String|String[] } [o.authors] - An author's name, or an array of more than one
+   * authors of the post.
    * @param { Object[] } [o.images=null] - An optional array of images linked in the post.
    * @param { Album } [o.album=null] - An optional album where the images are stored.
    * @param { String } [o.albumId=null] - An optional album _id value.
@@ -168,11 +170,11 @@ class Post {
     const p = 16
     let str = 'Post configuration details:\n'
               + `${'title:'.padEnd(p)} ${this.title}`
-              + `\n{'id:'.padEnd(p)} ObjectId(${this.#_id})`
-              + `\n{'new post?'.padEnd(p)} ${this.#newPost}`
-              + `\n{'authors:'.padEnd(p)} ${this.#authors}`
-              + `\n{'slug:'.padEnd(p)} ${this.#slug}`
-              + `\n{'created:'.padEnd(p)} ${this.#createdOn}`
+              + `\n${'id:'.padEnd(p)} ObjectId(${this.#_id})`
+              + `\n${'new post?'.padEnd(p)} ${this.#newPost}`
+              + `\n${'authors:'.padEnd(p)} ${this.#authors.map((a) => a.author).join(', ')}`
+              + `\n${'slug:'.padEnd(p)} ${this.#slug}`
+              + `\n${'created:'.padEnd(p)} ${this.#createdOn}`
     if (this.#albumId) {
       str += `\n${'album id:'.padEnd(p)} ObjectId(${this.#albumId})`
     }
