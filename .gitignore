@@ -4,6 +4,7 @@ fileURLToPath.js
 config/*
 tmp/*
 test/blogs/*
+.npmrc
 
 # x.509 keys for testing
 *.pem
