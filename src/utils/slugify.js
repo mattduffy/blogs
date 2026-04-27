@@ -11,7 +11,8 @@ const MAX_SLUG_LENGTH = process.env.MAX_SLUG_LENGTH || 80
  * @summary Turn a text string into a valid url slug.
  * @author Matthew Duffy <mattduffy@gmail.com>
  * @param { String } t - A string of text which may contain non-url compatible characters.
- * @return { String } A string with all punctuation chars removed and spaces collapsed into single - char.
+ * @return { String } A string with all punctuation chars removed and spaces collapsed
+ *                    into single - char.
  */
 function slugify(t) {
   if (!t) return null

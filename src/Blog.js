@@ -76,8 +76,10 @@ class Blog {
    * @param { Object } config.redis - An instance of a redis connection.
    * @param { string } config.blogId - A string of the unique blog id.
    * @param { string } config.blogUrl - Path portion of public url for the blog.
-   * @param { string } config.blogHeaderImageSmall - Path portion of the url to show small blog preview image.
-   * @param { string } config.blogHeaderImageBig - Path portion of the url to show big blog preview image.
+   * @param { string } config.blogHeaderImageSmall - Path portion of url to show small blog preview
+   *                                                 image.
+   * @param { string } config.blogHeaderImageBig - Path portion of url to show big blog preview
+   *                                               image.
    * @param { string } config.blogTitle - The title of the blog.
    * @param { ObjectId|string } config.blogOwerId - The ObjectId value of the blog owner.
    * @param { string } config.blogOwerName - The name of the blog owner.
@@ -111,7 +113,10 @@ class Blog {
     this.#blogHeaderImageSmall = config.blogHeaderImageSmall ?? config.headerImageSmall ?? null
     this.#blogHeaderImageBig = config.blogHeaderImageBig ?? config.headerImageBig ?? null
     this.#blogTitle = config?.blogTitle ?? config.title ?? null
-    this.#blogUrl = config?.blogUrl ?? config?.url ?? config?.slug ?? slugify(this.#blogTitle) ?? null
+    this.#blogUrl = config?.blogUrl
+      ?? config?.url
+      ?? config?.slug
+      ?? slugify(this.#blogTitle) ?? null
     this.#blogOwnerId = config?.blogOwnerId ?? config.ownerId ?? config?.creatorId ?? null
     this.#blogOwnerName = config?.blogOwnerName ?? config.ownerName ?? config?.creatorName ?? null
     if (config?.blogKeywords) {
@@ -366,7 +371,8 @@ class Blog {
    * @author Matthew Duffy <mattduffy@gmail.com>
    * @async
    * @throws { Error } If no db collection is available.
-   * @return { ObjectId|Boolean } Return the new monogdb objectId if successfully saved to db, otherwise false.
+   * @return { ObjectId|Boolean } Return the new monogdb objectId if successfully saved to db,
+   *                              otherwise false.
    */
   async save() {
     const log = _log.extend('save')

@@ -39,7 +39,8 @@ class Blogs {
    * Create a new blog instance from form data.
    * @summary Create a new blog instance from form data.
    * @author Matthew Dufffy <mattduffy@gmail.com>
-   * @param { MongoClient|Collection } mongo - Either a mongodb client connection or its blog collection.
+   * @param { MongoClient|Collection } mongo - Either a mongodb client connection or its
+   *                                           blog collection.
    * @param { Object } o - An object literal with minimum required blog details.
    * @param { String } o.description - A string containing the blog description.
    * @param { String } o.title - A string containing the blog title.
@@ -75,7 +76,8 @@ class Blogs {
    * @summary Find a saved blog in the database by given username and return as a Blog instance.
    * @author Matthew Duffy <mattduffy@gmail.com>
    * @async
-   * @param { MongoClient|Collection } mongo - Either a mongodb client connection or its blog collection.
+   * @param { MongoClient|Collection } mongo - Either a mongodb client connection or its
+   *                                           blog collection.
    * @param { Redis } redis - A redis client connection instance.
    * @param { String } username - The string value of a username to search the db for.
    * @return { Blog|Boolean } - A populated instance of a Blog if found, otherwise false.
@@ -115,7 +117,8 @@ class Blogs {
    * @summary Find a saved blog in the database by give id value and return as an Album instance.
    * @author Matthew Duffy <mattduffy@gmail.com>
    * @async
-   * @param { MongoClient|Collection } mongo - Either a mongodb client connection or its blog collection.
+   * @param { MongoClient|Collection } mongo - Either a mongodb client connection or its
+   *                                           blog collection.
    * @param { Redis } redis - A redis client connection instance.
    * @param { String } id - The string value of an ObjectId to search the db for.
    * @return { Album|Boolean } - A populated instance of an Album if found, otherwise false.
@@ -154,7 +157,8 @@ class Blogs {
    * @summary Get a list of publicly accessible blogs.
    * @author Matthew Duffy <mattduffy@gmail.com>
    * @async
-   * @param { MongoClient|Collection } mongo - Either a mongodb client connection or its blog collection.
+   * @param { MongoClient|Collection } mongo - Either a mongodb client connection or its
+   *                                           blog collection.
    * @return { Object[] } - An array of objects listing public blog details.
    */
   static async usersWithPublicBlogs(mongo) {
@@ -200,9 +204,11 @@ class Blogs {
    * @summary Return a list of public and private blog for a specific user account.
    * @author Matthew Duffy <mattduffy@gmail.com>
    * @async
-   * @param { (MongoClient|Collection) } mongo - Either a mongodb client connection or its ablum collection.
+   * @param { (MongoClient|Collection) } mongo - Either a mongodb client connection or its
+   *                                             ablum collection.
    * @param { String } username - The name of user for blog list.
-   * @return { (Object|Boolean) } - An object literal with public and private list, or false if none found.
+   * @return { (Object|Boolean) } - An object literal with public and private list, or false
+   *                                if none found.
    */
   static async list(mongo, user) {
     if (!mongo) return false
@@ -245,7 +251,10 @@ class Blogs {
     console.log(pipeline)
     console.log(`Looking for blog for user: ${user}`)
     // const blogCursor = await collection.find({ blogOwner: user }).toArray()
-    // const blogCursor = await collection.find({ creator: user }, { projection: { name: 1, public: 1, url: 1 } }).toArray()
+    // const blogCursor = await collection.find(
+    //   {creator: user },
+    //   { projection: { name: 1, public: 1, url: 1 } }
+    // ).toArray()
     const blogBuckets = await collection.aggregate(pipeline).toArray()
     // console.log('blogBuckets: %o', blogBuckets)
     return blogBuckets
@@ -262,8 +271,9 @@ class Blogs {
    */
   static async recentlyAdded(redis, count = 10) {
     const recentlyAddedStream = 'blogs:recent:10'
-    const response = await redis.xrevrange(recentlyAddedStream, '+', '-', 'COUNT', count)
-    console.log(`redis: xrevrange ${recentlyAddedStream} + - COUNT ${count}`)
+    // const response = await redis.xrevrange(recentlyAddedStream, '+', '-', 'COUNT', count)
+    const response = await redis.xRevRange(recentlyAddedStream, '+', '-', { COUNT: count })
+    console.log(`redis: xRevRange ${recentlyAddedStream} + - COUNT ${count}`)
     console.log(response)
     // [ [ '1687734539621-0', [ 'blog', '{"name":"Here is a sixth one"}' ] ] ]
     const recent10 = response.map((a) => JSON.parse(a[1][1]))
@@ -276,7 +286,8 @@ class Blogs {
    * @summary Return a list of users with publicly accessible blogs.
    * @author Matthew Duffy <mattduffy@gmail.com>
    * @async
-   * @param { (MongoClient|Collection) } mongo - Either a mongodb client connection or its ablum collection.
+   * @param { (MongoClient|Collection) } mongo - Either a mongodb client connection or its
+   *                                             ablum collection.
    * @return { (Array|Boolean) } An array of usernames of false if none found.
    */
   static async usersWithPublicAlbums(mongo) {
